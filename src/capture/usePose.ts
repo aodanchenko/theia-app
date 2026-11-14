@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { DrawingUtils, FilesetResolver, PoseLandmarker, type Landmark } from '@mediapipe/tasks-vision'
+import { DrawingUtils, FilesetResolver, PoseLandmarker, type Landmark, type NormalizedLandmark } from '@mediapipe/tasks-vision'
 import { createLandmarkSmoother } from '../engine/oneEuro.ts'
 
 // shortcut: wasm and model load from the internet on first use; copy them into public/ for fully offline use.
@@ -8,13 +8,13 @@ const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
 const modelUrl = (m: 'full' | 'heavy') => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${m}/float16/1/pose_landmarker_${m}.task`
 
 // While `enabled`, runs MediaPipe Pose on the playing <video>, draws the skeleton on the canvas, and calls onPose
-// with the 33 world landmarks (metres) for every frame with a person in it. Both the drawn and the reported landmarks are
+// with the 33 world landmarks (metres) and the image landmarks (0..1 of the video frame) for every frame with a person in it. Both the drawn and the reported landmarks are
 // One-Euro smoothed. Video never leaves the device.
 export default function usePose(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   enabled: boolean,
-  onPose: (world: Landmark[]) => void,
+  onPose: (world: Landmark[], image: NormalizedLandmark[]) => void,
   model: 'full' | 'heavy' = 'full',
 ) {
   const [result, setResult] = useState<'running' | 'error' | null>(null)
@@ -53,7 +53,7 @@ export default function usePose(
         const landmarks = smoothImage(result.landmarks[0], now)
         draw.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
         draw.drawLandmarks(landmarks, { color: joint, radius: 4 })
-        onPoseRef.current(smoothWorld(result.worldLandmarks[0], now))
+        onPoseRef.current(smoothWorld(result.worldLandmarks[0], now), landmarks)
       }
       loop()
       setResult('running')
