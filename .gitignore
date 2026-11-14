@@ -28,8 +28,8 @@ dist-ssr
 *.mov
 *.webm
 *.avi
-data/
-datasets/
+/data/
+/datasets/
 
 # Local handoff notes
 CONTEXT.md
