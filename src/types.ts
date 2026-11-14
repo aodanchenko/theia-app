@@ -55,3 +55,13 @@ export interface OverlayTag {
   label: string
   alert?: boolean
 }
+
+// Earth: answers from "About you" (tap only). Stored on the device.
+export interface EarthProfile {
+  side: 'left' | 'right' | 'both' | 'unsure' // affected side
+  prosthesis: boolean
+  aid: boolean // cane, crutch or walker
+  position: 'standing' | 'seated' // how they exercise
+  voice: boolean // speak the cues
+  bigText: boolean
+}
