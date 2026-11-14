@@ -1,20 +1,16 @@
 import type { ReactNode } from 'react'
 import styles from './Toolbar.module.css'
 
+// Row of working controls under the header. Every button must do something.
 export function Toolbar({ children }: { children: ReactNode }) {
-  return <div className={styles.toolbar}>{children}</div>
+  return <div className={styles.toolbar} role="toolbar">{children}</div>
 }
 
-// Read-only state chip (not a button): shows what the session is using.
-export function ToolChip({ active = false, live = false, children }: { active?: boolean; live?: boolean; children: ReactNode }) {
-  return (
-    <span className={styles.chip} data-active={active || undefined}>
-      {live && <span className={styles.led} aria-hidden="true" />}
-      {children}
-    </span>
-  )
+// `camera` = the red Enable camera button (the one exception to "red means flagged").
+export function ToolButton({ onClick, disabled, camera, children }: { onClick: () => void; disabled?: boolean; camera?: boolean; children: ReactNode }) {
+  return <button type="button" className={styles.button} data-camera={camera || undefined} onClick={onClick} disabled={disabled}>{children}</button>
 }
 
-export function ToolSeparator() {
-  return <span className={styles.separator} aria-hidden="true" />
+export function ToolNote({ alert, children }: { alert?: boolean; children: ReactNode }) {
+  return <span className={styles.note} data-alert={alert || undefined} role="status">{children}</span>
 }

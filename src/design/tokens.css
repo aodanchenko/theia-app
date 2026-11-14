@@ -19,13 +19,11 @@
 [data-theme="space"] {
   --bg: #f3f3f3;
   --surface: #fff;
-  --surface-head: #e9e9eb;
   --ink: #1d1f23;
   --ink-2: #3a3d43;
   --muted: #6b6e75;
   --rule: #d4d4d6;
   --accent: var(--nasa-blue);
-  --on-accent: #fff;
   --alert: var(--nasa-red);   /* flags, never decoration */
   --cue: var(--nasa-red);     /* overlay drawn on the camera */
   --good: #2a8a52;
@@ -36,6 +34,8 @@
   --text-xs: 10px;
   --text-sm: 11px;
   --text-md: 12px;
+  --text-lg: 20px;  /* recommendation: decision */
+  --text-xl: 44px;  /* recommendation: action, readable from the squat rack */
 }
 
 /* Earth: rehab at home on a phone. Warm, large, one instruction at a time. */

@@ -4,3 +4,4 @@
 .tile b { font: 500 15px/1 var(--font-mono); }
 .tile[data-alert] b { color: var(--alert); }
 .unit { margin-left: 2px; font-size: var(--text-xs); color: var(--muted); }
+.expected { text-transform: none; letter-spacing: 0; }

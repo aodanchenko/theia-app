@@ -18,12 +18,10 @@ export const SESSION: Session = {
 }
 
 export const PARAMETERS: Parameter[] = [
-  { name: 'R knee valgus', now: '9°', base: '3°', delta: '+6', flag: 'rehab', formula: '=VALGUS(R_HIP, R_KNEE, R_ANKLE)' },
+  { name: 'R knee valgus', now: '9°', base: '3°', delta: '+6', flag: 'rehab' },
   { name: 'L knee valgus', now: '2°', base: '2°', delta: '0' },
-  { name: 'Hip flexion', now: '94°', base: '96°', delta: '−2' },
   { name: 'Trunk lean', now: '4°', base: '3°', delta: '+1' },
-  { name: 'Depth hip/knee', now: '0.92', base: '1.00', delta: '−0.08' },
-  { name: 'Tempo (s)', now: '2.1', base: '2.0', delta: '+0.1' },
+  { name: 'Depth (hip ÷ knee height)', now: '0.92', base: '1.00', delta: '−0.08' },
   { name: 'L/R load', now: '46/54', base: '50/50', delta: '+4' },
 ]
 
@@ -47,8 +45,8 @@ function trend(seed: number, up: boolean): number[] {
 }
 
 export const VITALS: Vital[] = [
-  { name: 'Heart rate', value: '128', unit: 'bpm', alert: true, trend: trend(1, true) },
-  { name: 'HRV rMSSD', value: '38', unit: 'ms', alert: true, trend: trend(2, true) },
+  { name: 'Heart rate', value: '128', unit: 'bpm', expected: 'exercise', trend: trend(1, true) },
+  { name: 'HRV rMSSD', value: '38', unit: 'ms', expected: 'exercise', trend: trend(2, true) },
   { name: 'SpO2', value: '97', unit: '%', trend: trend(3, false) },
   { name: 'Resp rate', value: '24', unit: '/min', trend: trend(4, false) },
   { name: 'Core temp', value: '37.1', unit: '°C', trend: trend(5, false) },

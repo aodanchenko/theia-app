@@ -22,13 +22,12 @@ export interface Parameter {
   base: string
   delta: string
   flag?: string
-  formula?: string
 }
 
 export interface Limits {
   baseline: [lo: number, hi: number]
   rehab: number
-  base: number
+  base?: number
 }
 
 export interface Vital {
@@ -36,6 +35,7 @@ export interface Vital {
   value: string
   unit: string
   alert?: boolean
+  expected?: string // a known cause explains the value, so it is not flagged
   trend: number[]
 }
 

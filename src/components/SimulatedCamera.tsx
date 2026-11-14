@@ -3,7 +3,7 @@ import type { Joint, OverlayTag, Theme } from '../types.ts'
 import styles from './SimulatedCamera.module.css'
 
 // Drawn stand-in for the live camera: a person mid-squat, front view, right knee drifting inward.
-// Swap for <PoseCamera> when the live feed is wired in.
+// Shown until the camera is enabled; the live view draws the real MediaPipe skeleton instead.
 const JOINTS: Record<Joint, [x: number, y: number]> = {
   head: [180, 118], neck: [180, 150], ls: [142, 170], rs: [218, 170], le: [124, 226], re: [236, 226],
   lw: [156, 250], rw: [204, 250], lh: [158, 296], rh: [202, 296], lk: [126, 372], rk: [192, 378], la: [138, 462], ra: [222, 462],
