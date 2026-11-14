@@ -24,14 +24,20 @@
   --muted: #6b6e75;
   --rule: #d4d4d6;
   --surface-head: #ebebed;    /* title strips, header rows, toolbar */
-  --raised: inset 1px 1px 0 rgba(255, 255, 255, .95), inset -1px -1px 0 rgba(0, 0, 0, .14);  /* buttons */
-  --pressed: inset 1px 1px 0 rgba(0, 0, 0, .14), inset -1px -1px 0 rgba(255, 255, 255, .95); /* button :active */
+  /* Bevels carry their own 1px ring, so raised controls need no border (one edge, not border + bevel). */
+  --raised: 0 0 0 1px rgba(0, 0, 0, .15), 0 1px 0 rgba(0, 0, 0, .07), inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(0, 0, 0, .05);  /* buttons */
+  --pressed: 0 0 0 1px rgba(0, 0, 0, .2), inset 0 1px 2px rgba(0, 0, 0, .16);  /* button :active, toggled on */
+  --groove: inset 0 1px 0 rgba(255, 255, 255, .85);  /* lit lip under a 1px rule: the rule + lip read as a cut seam */
   --sunken: inset 1px 1px 1px rgba(0, 0, 0, .08);  /* readouts: number cells, tracks, value tiles */
+  --engraved: 0 1px 0 rgba(255, 255, 255, .9);      /* labels cut into a light panel: lit lower edge */
+  --engraved-dark: 0 -1px 0 rgba(0, 0, 0, .3);      /* the same cut on a dark or red surface */
+  /* Five colours only: panel greys, ink black, phosphor green, amber, red. Blue = our method in charts, nothing else. */
   --accent: var(--nasa-blue);
   --alert: var(--nasa-red);   /* flags, never decoration */
   --cue: var(--nasa-red);     /* overlay drawn on the camera */
-  --good: #2a8a52;
-  --good-band: rgba(45, 160, 90, .12);
+  --good: #12803a;            /* phosphor green: within baseline, normal */
+  --good-band: rgba(18, 160, 70, .12);
+  --caution: #b26f00;         /* amber: needs attention, not a health flag (camera, framing) */
   --mark: #a8a8a9;            /* neutral chart marks */
   --mark-empty: #d4d4d6;
   --font-body: var(--font-sans);

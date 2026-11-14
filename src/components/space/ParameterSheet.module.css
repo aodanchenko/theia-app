@@ -1,6 +1,6 @@
 .sheet { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-variant-numeric: tabular-nums; border-top: 1px solid var(--rule); }
 .sheet th, .sheet td { height: 22px; padding: 0 10px; border-bottom: 1px solid var(--rule); font-size: var(--text-md); font-weight: 400; text-align: left; white-space: nowrap; }
-.sheet thead th { background: var(--surface-head); font: 600 var(--text-sm) var(--font-sans); color: var(--ink-2); letter-spacing: .06em; text-transform: uppercase; }
+.sheet thead th { background: var(--surface-head); font: 600 var(--text-sm) var(--font-sans); color: var(--ink-2); letter-spacing: .1em; text-transform: uppercase; text-shadow: var(--engraved); }
 .sheet .num { text-align: right; }
 .sheet tbody .num { background: var(--bg); box-shadow: var(--sunken); border-left: 1px solid var(--surface); }
 [data-flag] > * { color: var(--alert); font-weight: 600; }

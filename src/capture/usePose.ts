@@ -34,6 +34,7 @@ export default function usePose(
       if (stopped) return landmarker.close()
       const pose = landmarker
       const draw = new DrawingUtils(ctx)
+      const joint = getComputedStyle(ctx.canvas).getPropertyValue('--good').trim() // joints in phosphor green: red is only for flags
       let lastTime = -1
       const loop = () => {
         frame = requestAnimationFrame(loop)
@@ -45,7 +46,7 @@ export default function usePose(
         const landmarks = result.landmarks[0]
         if (!landmarks) return
         draw.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
-        draw.drawLandmarks(landmarks, { color: '#fc3b30', radius: 4 })
+        draw.drawLandmarks(landmarks, { color: joint, radius: 4 })
         onPoseRef.current(result.worldLandmarks[0])
       }
       loop()
