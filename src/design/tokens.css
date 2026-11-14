@@ -1,0 +1,69 @@
+/* Theia design system: tokens, reset and motion. Components use only these variables. */
+
+:root {
+  /* brand (NASA palette) */
+  --nasa-red: #fc3b30;
+  --nasa-blue: #0062b3;
+  --nasa-black: #000815;
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-hyperlegible: "Atkinson Hyperlegible", system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --dur-press: 150ms;
+  --dur-enter: 320ms;
+}
+
+/* Space: astronaut workbench on a tablet. Light, dense, spreadsheet-like. */
+[data-theme="space"] {
+  --bg: #f3f3f3;
+  --surface: #fff;
+  --surface-head: #e9e9eb;
+  --ink: #1d1f23;
+  --ink-2: #3a3d43;
+  --muted: #6b6e75;
+  --rule: #d4d4d6;
+  --accent: var(--nasa-blue);
+  --on-accent: #fff;
+  --alert: var(--nasa-red);   /* flags, never decoration */
+  --cue: var(--nasa-red);     /* overlay drawn on the camera */
+  --good: #2a8a52;
+  --good-band: rgba(45, 160, 90, .12);
+  --mark: #a8a8a9;            /* neutral chart marks */
+  --mark-empty: #d4d4d6;
+  --font-body: var(--font-sans);
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-md: 12px;
+}
+
+/* Earth: rehab at home on a phone. Warm, large, one instruction at a time. */
+[data-theme="earth"] {
+  --bg: #f3eee4;
+  --surface: #f3eee4;
+  --ink: #1c1a17;
+  --muted: #625a4e;
+  --rule: #d8cfbf;
+  --alert: #b4560f;
+  --cue: #f0a24a;
+  --good: #2f7a4b;
+  --font-body: var(--font-hyperlegible);
+  --text-md: 18px;
+  --text-lg: 30px;
+  --text-xl: 96px;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { -webkit-font-smoothing: antialiased; font-synthesis: none; }
+body { min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-body); }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+button:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* motion: entrances only, once, transform/opacity */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+.enter { animation: rise var(--dur-enter) var(--ease-out) both; animation-delay: var(--delay, 0ms); }
+.pop { transform-box: fill-box; transform-origin: center; animation: pop 480ms var(--ease-out) 220ms both; }
+@media (prefers-reduced-motion: reduce) { .enter, .pop { animation: none !important; } }
