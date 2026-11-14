@@ -4,7 +4,8 @@ import { createLandmarkSmoother } from '../engine/oneEuro.ts'
 
 // shortcut: wasm and model load from the internet on first use; copy them into public/ for fully offline use.
 const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
-const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task'
+// full (9 MB) for phones; heavy (30 MB, slower) holds limbs better when the ARED frame hides part of the body
+const modelUrl = (m: 'full' | 'heavy') => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${m}/float16/1/pose_landmarker_${m}.task`
 
 // While `enabled`, runs MediaPipe Pose on the playing <video>, draws the skeleton on the canvas, and calls onPose
 // with the 33 world landmarks (metres) for every frame with a person in it. Both the drawn and the reported landmarks are
@@ -14,6 +15,7 @@ export default function usePose(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   enabled: boolean,
   onPose: (world: Landmark[]) => void,
+  model: 'full' | 'heavy' = 'full',
 ) {
   const [result, setResult] = useState<'running' | 'error' | null>(null)
   const onPoseRef = useRef(onPose)
@@ -29,7 +31,7 @@ export default function usePose(
     ;(async () => {
       const vision = await FilesetResolver.forVisionTasks(WASM)
       landmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' },
+        baseOptions: { modelAssetPath: modelUrl(model), delegate: 'GPU' },
         runningMode: 'VIDEO',
         numPoses: 1,
       })
@@ -65,7 +67,7 @@ export default function usePose(
       landmarker?.close()
       setResult(null)
     }
-  }, [enabled, videoRef, canvasRef])
+  }, [enabled, videoRef, canvasRef, model])
 
   return !enabled ? 'off' : result ?? 'loading'
 }
