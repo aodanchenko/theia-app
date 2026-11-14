@@ -122,7 +122,8 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `VitalsGrid` | `vitals[]` | Instrument tiles: name + status lamp (Normal / Expected / Watch / ▲ Flag), value in a recessed window, trend over the personal baseline band. Item: `{ name, value, unit, status, cause?, base?, trend?, domain?, source? }` (see `types.ts`). `expected` = outside baseline but a known cause explains it: never red |
 | `Sparkline` | `points[]`, `domain`, `band?`, `status` | Values in real units scaled to `domain`; `band` = baseline range; last point is a dot coloured by status |
 | **earth/** | | |
-| `CoachScreen` | `camera`, `cue`, `counter`, `action` (nodes) | Full-screen phone layout |
+| `DeviceFrame` | children | Earth's shell (CSS only): laptop/desktop (mouse) → phone frame with notch and a "made for phones" caption; touch devices → full screen, portrait only (sideways shows "Turn your device upright"). Sets `--inset-top` so content clears the notch |
+| `CoachScreen` | `camera`, `cue`, `counter`, `action` (nodes) | Phone layout; fills its parent (`DeviceFrame`), cue clears the safe area |
 | `CueCard` | `title`, `hint` | One short imperative sentence |
 | `RepCounter` | `done`, `total` | |
 | `StopButton` | `onStop` | |

@@ -1,0 +1,32 @@
+.stage { height: 100dvh; }
+.device { position: relative; height: 100%; }
+.caption, .rotate { display: none; }
+
+/* Laptop / desktop: a phone frame in the middle of the screen. */
+@media (hover: hover) and (pointer: fine) {
+  .stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; gap: 16px; padding: 24px; background: color-mix(in srgb, var(--bg) 90%, var(--ink)); }
+  .device {
+    align-self: center; height: min(844px, 100%); aspect-ratio: 390 / 844;
+    border: 12px solid var(--ink); border-radius: 52px; overflow: hidden; isolation: isolate;
+    --inset-top: 44px; /* clear the notch, like a real phone's safe area */
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--ink) 60%, white), 0 24px 60px -20px rgba(0, 0, 0, .45);
+  }
+  .device::after { /* speaker notch */ content: ''; position: absolute; z-index: 1; top: 10px; left: 50%; width: 96px; height: 26px; border-radius: 13px; background: var(--ink); translate: -50% 0; pointer-events: none; }
+  .caption { display: block; max-width: 40ch; font-size: 16px; color: var(--muted); text-align: center; text-wrap: balance; }
+}
+
+/* Phones and tablets: portrait only. */
+@media (pointer: coarse) and (orientation: landscape) {
+  .rotate {
+    position: fixed; inset: 0; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    background: var(--bg); color: var(--ink); text-align: center;
+  }
+  .rotate h1 { font-size: var(--text-lg); font-weight: 700; line-height: 1.15; }
+  .rotate p { max-width: 32ch; font-size: var(--text-md); color: var(--muted); }
+}
+.icon { width: 88px; height: 88px; }
+.ghost { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 3 3; opacity: .5; }
+.phone { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+.turn { fill: none; stroke: var(--alert); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
