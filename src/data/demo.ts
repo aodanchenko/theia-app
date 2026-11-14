@@ -1,7 +1,7 @@
 // Simulated demo session (ARED squat, set 2). Shown in the UI as SIMULATED.
 // Replace with engine output once engine/decide.ts exists.
 
-import type { Limits, OverlayTag, Parameter, Session, Vital } from '../types.ts'
+import type { OverlayTag, Parameter, Session, Vital } from '../types.ts'
 import { demoVitals } from './vitalsSim.ts'
 
 export const SESSION: Session = {
@@ -25,10 +25,6 @@ export const PARAMETERS: Parameter[] = [
   { name: 'Depth (hip ÷ knee height)', now: '0.92', base: '1.00', delta: '−0.08' },
   { name: 'L/R load', now: '46/54', base: '50/50', delta: '+4' },
 ]
-
-// R knee valgus per completed rep, degrees.
-export const VALGUS_BY_REP: number[] = [2, 3, 3, 4, 5, 7, 9]
-export const VALGUS_LIMITS: Limits = { baseline: [2, 4], rehab: 6, base: 10 }
 
 export const OVERLAY_TAGS: OverlayTag[] = [
   // measured by MediaPipe on the photo in SimulatedCamera (2D angles; knee width = knee distance / ankle distance)

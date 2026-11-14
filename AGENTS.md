@@ -36,7 +36,7 @@ src/
     space/               workbench components
     earth/               coach screen components
   pages/                 HomePage, SpacePage, EarthPage
-  types.ts              shared data shapes (Session, Parameter, Limits, Vital, OverlayTag)
+  types.ts              shared data shapes (Session, Parameter, Vital, OverlayTag)
   data/demo.ts           simulated session data. Replace with engine output.
   data/vitalsSim.ts      simulated vitals: effort rises per rep, decays at rest; HR/RR/HRV follow on their own random periods; rare episodes (SpO₂ dip, HR rise effort does not explain) give watch/flag (pure, tested)
   data/useSimVitals.ts   fixed demo vitals while the camera is off; live simulation that follows your reps while it is on
@@ -121,7 +121,6 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `ParameterSheet` | `rows[]` | Row: `{ name, now, base, delta, flag? }`. Flagged rows turn `--alert` |
 | `Panel` | `title`, `note`, `delay`, `grow`, children | Titled section in the side column; `grow` takes spare height (rep chart) |
 | `DriftChart` | `points[]`, `total`, `label` | Form drift per rep (line + dot per rep). Point: `{ drift, calibration?, flag? }`; drift = worst one-sided z ÷ flag threshold, so 1.0 = flag; axis tops out at 2 (bigger values pinned, value written). Live: your reps; camera off: a held-out UI-PRMD person (`REPLAY` in `squatModel.ts`) |
-| `RepChart` (prototypes only) | `values[]`, `total`, `limits`, `label`, `unit` (default `°`) | `limits`: `{ baseline: [lo, hi], rehab, base? }`. Bars ≥ rehab are flagged; no `base` line when omitted. Values in 0..13 |
 | `VitalsGrid` | `vitals[]` | Instrument tiles: name + status lamp (Normal / Expected / Watch / ▲ Flag), value in a recessed window, trend over the personal baseline band. Item: `{ name, value, unit, status, cause?, base?, trend?, domain?, source? }` (see `types.ts`). `expected` = outside baseline but a known cause explains it: never red |
 | `Sparkline` | `points[]`, `domain`, `band?`, `status` | Values in real units scaled to `domain`; `band` = baseline range; last point is a dot coloured by status |
 | **earth/** | | |

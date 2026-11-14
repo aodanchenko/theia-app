@@ -24,12 +24,6 @@ export interface Parameter {
   flag?: string
 }
 
-export interface Limits {
-  baseline: [lo: number, hi: number]
-  rehab: number
-  base?: number
-}
-
 // normal = within personal baseline; expected = outside it but a known cause explains it (e.g. exercise);
 // watch = outside it, no known cause; flag = past a safety limit.
 export type VitalStatus = 'normal' | 'expected' | 'watch' | 'flag'
