@@ -1,0 +1,10 @@
+.workbench {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: 26px 34px 1fr 26px 24px;
+  overflow: hidden;
+  background: var(--bg);
+  font-size: var(--text-md);
+}
+.main { display: grid; grid-template-columns: 520px 1fr; min-height: 0; }
+.side { display: grid; grid-template-rows: 26px auto auto 1fr; min-height: 0; background: var(--surface); }

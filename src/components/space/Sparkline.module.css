@@ -1,0 +1,3 @@
+.spark { width: 58px; height: 16px; }
+.spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.4; }
+.spark polyline[data-alert] { stroke: var(--alert); }

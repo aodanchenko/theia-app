@@ -1,0 +1,5 @@
+.bar { display: flex; border-bottom: 1px solid var(--rule); }
+.cell, .fx { display: grid; place-items: center; border-right: 1px solid var(--rule); color: var(--muted); }
+.cell { width: 44px; }
+.fx { width: 26px; }
+.formula { display: flex; align-items: center; padding: 0 8px; font: var(--text-md) var(--font-mono); }
