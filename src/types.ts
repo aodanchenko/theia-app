@@ -5,23 +5,18 @@ export type Theme = 'space' | 'earth'
 export interface Session {
   file: string
   missionDay: number
-  set: number
-  rep: number
-  reps: number
   loadKg: number
-  nextLoadKg: number
   baselineSessions: number
-  model: string
   knownCause: string
-  cue: string
 }
 
 export interface Parameter {
   name: string
   now: string
+  correct: string // the correct-form limit, e.g. "≥ 90°"
   base: string
-  delta: string
-  flag?: string
+  flag?: string // what to do, e.g. "go deeper"
+  tone?: 'alert' | 'caution' // alert = off the personal baseline; caution = within it but short of correct form
 }
 
 // normal = within personal baseline; expected = outside it but a known cause explains it (e.g. exercise);

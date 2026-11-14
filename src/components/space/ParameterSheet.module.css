@@ -3,4 +3,5 @@
 .sheet thead th { background: var(--surface-head); font: 600 var(--text-sm) var(--font-sans); color: var(--ink-2); letter-spacing: .1em; text-transform: uppercase; text-shadow: var(--engraved); }
 .sheet .num { text-align: right; }
 .sheet tbody .num { background: var(--bg); box-shadow: var(--sunken); border-left: 1px solid var(--surface); }
-[data-flag] > * { color: var(--alert); font-weight: 600; }
+[data-tone='alert'] > * { color: var(--alert); font-weight: 600; }
+[data-tone='caution'] > * { color: var(--caution); font-weight: 600; }

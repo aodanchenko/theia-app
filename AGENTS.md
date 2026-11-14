@@ -37,7 +37,7 @@ src/
     earth/               coach screen components
   pages/                 HomePage, SpacePage, EarthPage
   types.ts              shared data shapes (Session, Parameter, Vital, OverlayTag)
-  data/demo.ts           simulated session data. Replace with engine output.
+  data/demo.ts           session metadata (file, mission day, load) and the photo's joint tags
   data/vitalsSim.ts      simulated vitals: effort rises per rep, decays at rest; HR/RR/HRV follow on their own random periods; rare episodes (SpO₂ dip, HR rise effort does not explain) give watch/flag (pure, tested)
   data/useSimVitals.ts   fixed demo vitals while the camera is off; live simulation that follows your reps while it is on
   engine/                plain TS, no React/DOM, must run in Node
@@ -126,9 +126,9 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `CameraPanel` | `stream`, `caption[]`, `onPose`, `children(live)` | Shows the `stream` (camera on/off lives in the toolbar) with the MediaPipe skeleton, `onPose(worldLandmarks)` per frame. Caption top-right (empty lines skipped) |
 | `Recommendation` | `decision`, `action`, `reason`, `basis`, `tone`, `id` | Top of the side column, large text readable from the rack. `tone`: `alert` (▲) / `good` (✓) / `neutral`; a new `id` replays the entrance |
 | `ModelCheck` | `rows[]`, `caption` | Row: `{ label, caught, ours? }`. Bars = share of bad reps caught at the same false-alert rate |
-| `ParameterSheet` | `rows[]` | Row: `{ name, now, base, delta, flag? }`. Flagged rows turn `--alert` |
+| `ParameterSheet` | `rows[]` | Row: `{ name, now, correct, base, flag?, tone? }`; `correct` = the correct-form limit ("≥ 90°"), `flag` = what to do ("go deeper"). `tone`: `alert` (▲, red) = off the personal baseline; `caution` (!, amber) = within it but short of correct form. Sits right under the recommendation (its "why"); rows keep the fixed `FEATURES` order |
 | `Panel` | `title`, `note`, `delay`, `grow`, children | Titled section in the side column; `grow` takes spare height (rep chart) |
-| `DriftChart` | `points[]`, `total`, `label` | Form drift per rep (line + dot per rep). Point: `{ drift, calibration?, flag? }`; drift = worst one-sided z ÷ flag threshold, so 1.0 = flag; axis tops out at 2 (bigger values pinned, value written). Live: your reps; camera off: a held-out UI-PRMD person (`REPLAY` in `squatModel.ts`) |
+| `DriftChart` | `points[]`, `total`, `label` | Form drift per rep (line + dot per rep). Point: `{ drift, calibration?, flag? }`; drift = worst one-sided z ÷ flag threshold, so 1.0 = flag; axis tops out at 2 (bigger values pinned, value written). Live: your reps; camera off: the demo set (`DEMO_REPS`) |
 | `VitalsGrid` | `vitals[]` | Instrument tiles: name + status lamp (Normal / Expected / Watch / ▲ Flag), value in a recessed window, trend over the personal baseline band. Item: `{ name, value, unit, status, cause?, base?, trend?, domain?, source? }` (see `types.ts`). `expected` = outside baseline but a known cause explains it: never red |
 | `Sparkline` | `points[]`, `domain`, `band?`, `status` | Values in real units scaled to `domain`; `band` = baseline range; last point is a dot coloured by status |
 | **earth/** | | |
@@ -157,9 +157,12 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 ## Squat model (MVP)
 
 - Live on `/space`: the first 3 detected reps are the personal baseline; each later rep is z-scored against it with the rehab scale (how much one person's correct reps vary, from UI-PRMD). Flag when the worst z passes `EVAL.personal.threshold`; the worst feature picks the cue.
-- Before the first live rep the page shows the simulated demo data.
+- **Correct form beats "like your baseline".** `FORM_LIMITS` (squat.ts): knee flexion ≥ 90°, knees ≥ foot width, trunk ≤ 45° (textbook), left–right gap ≤ 7° (UI-PRMD). `IDEAL` (generated) = median of all correct reps (≈105°, 1.26, 34°, 3°). Correct form alone flags ~30% of a new person's correct reps (held out), so red flags stay on the personal baseline (98% caught, 11% false) and correct form is the target in every message plus an amber "Adjust form" nudge when a rep or the baseline misses it.
+- The recommendation speaks in body terms ("knees bent to 63°, correct ≥ 90° (ideal 105°) · your normal 111° · 3 reps in a row"), never z-scores, and says what to do with the set: repeat the rep, or after 3 flagged in a row, stop and lower the load.
+- Before the first live rep: the photo astronaut's set (`DEMO_REPS` in demo.ts): reps 1–9 SIMULATED (decent baseline, then the stance turns uneven and the knees drift in), rep 10 = the photo measured with MediaPipe heavy (`PHOTO_REP`). It runs through the same `liveView` as live reps, so recommendation, table, chart, tags and status bar all describe the man in the picture.
 - Reps are detected relative to the person's own standing knee angle (MediaPipe reads straight legs as ~25–30°). Features are averaged over the bottom of the rep. Live scoring widens the rehab scale by `MEDIAPIPE_NOISE` (measured on identical frames), otherwise jitter alone gets flagged.
 - Result on UI-PRMD (10 people, leave-one-person-out, 10% false alerts): textbook 83%, rehab population 66%, personal baseline 98%, personal + rehab 98% of bad reps caught. The personal baseline does most of the work; rehab data mainly sets a usable untuned threshold.
+- Left–right asymmetry needs a front-on camera: from a three-quarter view one camera misjudges the far leg (the demo photo read a 22° gap on even legs), so the demo keeps that photo's gap at baseline.
 - Limits: 10 healthy people with acted errors, Vicon markers (not MediaPipe), so live accuracy on a phone camera is untested.
 
 ## Product rules (from the team's decisions)

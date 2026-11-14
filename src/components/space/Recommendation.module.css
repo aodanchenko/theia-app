@@ -8,4 +8,5 @@
 .rec[data-tone="caution"] .decision { color: var(--caution); }
 .action { font: 600 var(--text-xl)/1.05 var(--font-body); color: var(--ink); text-wrap: balance; }
 .reason { font: var(--text-md)/1.3 var(--font-mono); color: var(--ink-2); }
+.next { font: 600 var(--text-md)/1.3 var(--font-mono); color: var(--ink); }
 .basis { font: var(--text-sm)/1.3 var(--font-mono); color: var(--muted); }
