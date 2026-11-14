@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theia joint icon</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#e6e3dd;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#22201c;padding:48px 16px 80px;-webkit-font-smoothing:antialiased}
+main{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:44px 36px}
+.tile{width:112px;height:112px;border-radius:25px;overflow:hidden;box-shadow:0 12px 24px -14px rgba(0,0,0,.5)}
+.tile.white{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 12px 24px -14px rgba(0,0,0,.35)}
+.tile svg{display:block;width:100%;height:100%}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+section{display:flex;flex-direction:column;align-items:center;gap:18px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+p{font-size:14px;line-height:1.45;color:#5b5852;text-align:center;max-width:280px}
+.big{width:200px;height:200px;border-radius:45px;overflow:hidden;box-shadow:0 20px 40px -18px rgba(0,0,0,.5)}
+.big svg,.sm svg{display:block;width:100%;height:100%}
+.row{display:flex;gap:18px;align-items:center}
+.sm{width:60px;height:60px;border-radius:14px;overflow:hidden}
+.home{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:#22201c}
+.dark{background:#1b1d22;border-radius:18px;padding:14px 16px}
+.dark .home{color:#fff}
+</style>
+</head>
+<body>
+<main id="m"></main>
+<script>
+const BLACK='#000815', WHITE='#f2f2f0', RED='#fc3b30', BLUE='#0062b3', GREY='#a8a8a9', GREY2='#b0b1b3', SHEET='#f3f3f3', RULE='#d4d4d6';
+const icons=[
+ ['Joint · original','The current one, for comparison: the grey lens around the limb.',
+  `<rect width="512" height="512" fill="${BLACK}"/><circle cx="256" cy="256" r="160" fill="none" stroke="${WHITE}" stroke-width="12" opacity=".35"/><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Bare','No frame at all. The limb is bigger and carries the icon alone.',
+  `<rect width="512" height="512" fill="${BLACK}"/><g transform="translate(-10,0) translate(256 256) scale(1.25) translate(-256 -256)"><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/></g>`],
+ ['Angle','The circle becomes a short arc at the knee: the angle the app is measuring.',
+  `<rect width="512" height="512" fill="${BLACK}"/><path d="M262 205A70 70 0 0 0 256 316" fill="none" stroke="${RED}" stroke-width="14" stroke-linecap="round" opacity=".9"/><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Viewfinder','Camera corners instead of a lens: this body is being looked at, not judged.',
+  `<rect width="512" height="512" fill="${BLACK}"/><g fill="none" stroke="${WHITE}" stroke-width="16" stroke-linecap="round" opacity=".55"><path d="M104 168V104h64"/><path d="M344 104h64v64"/><path d="M104 344v64h64"/><path d="M408 344v64h-64"/></g><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Guide','A dashed line shows where the knee should track: the correction itself.',
+  `<rect width="512" height="512" fill="${BLACK}"/><line x1="226" y1="150" x2="236" y2="368" stroke="${WHITE}" stroke-width="10" stroke-dasharray="18 16" stroke-linecap="round" opacity=".5"/><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Halo','Only the knee gets a ring, the way it appears on the camera when it is flagged.',
+  `<rect width="512" height="512" fill="${BLACK}"/><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="58" fill="none" stroke="${RED}" stroke-width="12"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Full lens','Keep the lens but make it a confident full-white ring, tighter around the limb.',
+  `<rect width="512" height="512" fill="${BLACK}"/><circle cx="263" cy="259" r="148" fill="none" stroke="${WHITE}" stroke-width="18"/><polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/><circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+];
+const svg=b=>`<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Theia icon">${b}</svg>`;
+// Recolour one icon for a background: swap the tile fill and the marks that would vanish on it.
+function recolour(b,mode){
+  const all=(t,x,y)=>t.split(x).join(y), first=t=>t.replace(/fill="[^"]+"/,'fill="BG"');
+  let t=first(b);
+  if(mode==='blue'){ t=all(t,BLUE,'#ffffff'); t=all(t,WHITE,'#ffffff'); t=all(t,BLACK,'#ffffff'); t=all(t,'#fff"','#ffffff"'); t=all(t,SHEET,BLUE); t=all(t,RULE,'rgba(255,255,255,.35)'); t=all(t,GREY2,'#ffffff'); t=all(t,'BG',BLUE); }
+  else if(mode==='white'){ t=all(t,WHITE,BLACK); t=all(t,'#fff"',BLACK+'"'); t=all(t,SHEET,'#ffffff'); t=all(t,GREY2,GREY); t=all(t,'BG','#ffffff'); }
+  else t=b;
+  return t;
+}
+document.getElementById('m').innerHTML=icons.map(([n,d,b])=>`<section>
+  <h2>${n}</h2>
+  <div class="row">${['orig','blue','white'].map(m=>`<div class="tile ${m}">${svg(recolour(b,m))}</div>`).join('')}</div>
+  <p>${d}</p>
+</section>`).join('');
+</script>
+</body>
+</html>

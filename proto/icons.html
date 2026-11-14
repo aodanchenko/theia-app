@@ -7,7 +7,10 @@
 <style>
 *{box-sizing:border-box;margin:0}
 body{background:#e6e3dd;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#22201c;padding:48px 16px 80px;-webkit-font-smoothing:antialiased}
-main{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+main{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:44px 36px}
+.tile{width:112px;height:112px;border-radius:25px;overflow:hidden;box-shadow:0 12px 24px -14px rgba(0,0,0,.5)}
+.tile.white{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 12px 24px -14px rgba(0,0,0,.35)}
+.tile svg{display:block;width:100%;height:100%}
 @media (max-width:820px){main{grid-template-columns:1fr}}
 section{display:flex;flex-direction:column;align-items:center;gap:18px}
 h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
@@ -24,30 +27,87 @@ p{font-size:14px;line-height:1.45;color:#5b5852;text-align:center;max-width:280p
 <body>
 <main id="m"></main>
 <script>
-const BLACK='#000815', WHITE='#f2f2f0', RED='#fc3b30';
+const BLACK='#000815', WHITE='#f2f2f0', RED='#fc3b30', BLUE='#0062b3', GREY='#a8a8a9', GREY2='#b0b1b3', SHEET='#f3f3f3', RULE='#d4d4d6';
 const icons=[
  ['Theta','Θ: Theia\'s initial. The bar is a limb, the dot is the joint being watched.',
   `<rect width="512" height="512" fill="${BLACK}"/>
    <circle cx="256" cy="256" r="150" fill="none" stroke="${WHITE}" stroke-width="22"/>
    <line x1="150" y1="256" x2="362" y2="256" stroke="${WHITE}" stroke-width="22" stroke-linecap="round"/>
    <circle cx="256" cy="256" r="26" fill="${RED}"/>`],
- ['Orbit','A single orbit with one body on it: sight, a planet, a tracked point. Nothing else.',
-  `<rect width="512" height="512" fill="${BLACK}"/>
-   <circle cx="256" cy="256" r="148" fill="none" stroke="${WHITE}" stroke-width="16"/>
-   <circle cx="361" cy="151" r="30" fill="${WHITE}"/>
-   <circle cx="256" cy="256" r="10" fill="${RED}"/>`],
  ['Joint','Hip, knee, ankle: the three points the app reads, bent like a squat inside a lens.',
   `<rect width="512" height="512" fill="${BLACK}"/>
    <circle cx="256" cy="256" r="160" fill="none" stroke="${WHITE}" stroke-width="12" opacity=".35"/>
    <polyline points="226,150 300,262 236,368" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
    <circle cx="226" cy="150" r="20" fill="${WHITE}"/><circle cx="236" cy="368" r="20" fill="${WHITE}"/>
    <circle cx="300" cy="262" r="30" fill="${RED}"/>`],
+ ['Correct','The one thing the app does for everyone: a joint, and which way to move it.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <polyline points="196,128 246,256 196,384" fill="none" stroke="${WHITE}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+   <circle cx="246" cy="256" r="30" fill="${RED}"/>
+   <path d="M300 256h88" stroke="${WHITE}" stroke-width="22" stroke-linecap="round"/>
+   <path d="M360 220l36 36-36 36" fill="none" stroke="${WHITE}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>`],
+ ['Your normal','A band for your own normal and one point just outside it: the personal baseline idea.',
+  `<rect width="512" height="512" fill="${BLUE}"/>
+   <rect x="96" y="232" width="320" height="96" rx="48" fill="none" stroke="#fff" stroke-width="18"/>
+   <circle cx="208" cy="280" r="18" fill="#fff" opacity=".55"/><circle cx="280" cy="280" r="18" fill="#fff" opacity=".55"/>
+   <circle cx="356" cy="168" r="32" fill="${RED}" stroke="#fff" stroke-width="10"/>`],
+ ['Stand','A person drawn the way the camera sees them: points and lines, upright, with one joint in focus.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <g stroke="${WHITE}" stroke-width="16" stroke-linecap="round" fill="none">
+     <line x1="256" y1="168" x2="256" y2="286"/><line x1="200" y1="196" x2="312" y2="196"/>
+     <line x1="226" y1="286" x2="214" y2="420"/><line x1="286" y1="286" x2="306" y2="352"/><line x1="306" y1="352" x2="298" y2="420"/></g>
+   <circle cx="256" cy="120" r="30" fill="${WHITE}"/>
+   <circle cx="306" cy="352" r="26" fill="${RED}"/>`],
+ ['Eye','Theia is the goddess of sight. An eye whose pupil is a tracked joint: being seen, gently.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <path d="M88 256C148 168 204 136 256 136S364 168 424 256C364 344 308 376 256 376S148 344 88 256Z" fill="none" stroke="${WHITE}" stroke-width="20" stroke-linejoin="round"/>
+   <circle cx="256" cy="256" r="64" fill="none" stroke="${WHITE}" stroke-width="16"/>
+   <circle cx="256" cy="256" r="26" fill="${RED}"/>`],
+ ['Mirror','Two arcs facing each other: one person on Earth, one in orbit, the same movement read the same way.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <path d="M232 112A160 160 0 0 0 232 400" fill="none" stroke="${BLUE}" stroke-width="28" stroke-linecap="round"/>
+   <path d="M280 112A160 160 0 0 1 280 400" fill="none" stroke="${WHITE}" stroke-width="28" stroke-linecap="round"/>
+   <circle cx="256" cy="256" r="28" fill="${RED}"/>`],
+ ['Orbit','A single orbit with one body on it: sight, a planet, a tracked point. Nothing else.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <circle cx="256" cy="256" r="148" fill="none" stroke="${WHITE}" stroke-width="16"/>
+   <circle cx="361" cy="151" r="30" fill="${WHITE}"/>
+   <circle cx="256" cy="256" r="10" fill="${RED}"/>`],
+ ['Cell','The workbench sheet: a grey grid, one selected cell in blue, one flagged value in red.',
+  `<rect width="512" height="512" fill="${SHEET}"/>
+   <g stroke="${RULE}" stroke-width="6">${[128,256,384].map(v=>`<line x1="${v}" y1="0" x2="${v}" y2="512"/><line x1="0" y1="${v}" x2="512" y2="${v}"/>`).join('')}</g>
+   <rect x="128" y="128" width="256" height="256" fill="white" stroke="${BLUE}" stroke-width="22"/>
+   <circle cx="256" cy="256" r="44" fill="${RED}"/>`],
+ ['Ruler','The depth ruler from the camera view: ticks, and one red marker where the hip is.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <g stroke="${WHITE}" stroke-linecap="round">${Array.from({length:9},(_,i)=>`<line x1="${i%4?236:176}" x2="336" y1="${112+i*36}" y2="${112+i*36}" stroke-width="${i%4?10:16}"/>`).join('')}</g>
+   <path d="M352 256l64-40v80z" fill="${RED}"/>`],
+ ['Reps','The valgus-per-rep chart: grey reps, a blue threshold line, the rep that crossed it in red.',
+  `<rect width="512" height="512" fill="#fff"/>
+   ${[[96,90],[160,120],[224,150],[288,190]].map(([x,h])=>`<rect x="${x}" y="${400-h}" width="44" height="${h}" fill="${GREY}"/>`).join('')}
+   <rect x="352" y="140" width="44" height="260" fill="${RED}"/>
+   <line x1="72" y1="196" x2="440" y2="196" stroke="${BLUE}" stroke-width="12" stroke-dasharray="26 18"/>
+   <line x1="72" y1="400" x2="440" y2="400" stroke="${BLACK}" stroke-width="12"/>`],
+ ['Horizon','A blue planet edge under a single orbit: the space side, with the red point being tracked.',
+  `<rect width="512" height="512" fill="${BLACK}"/>
+   <circle cx="256" cy="700" r="380" fill="${BLUE}"/>
+   <ellipse cx="256" cy="256" rx="190" ry="70" fill="none" stroke="${GREY2}" stroke-width="10" transform="rotate(-18 256 256)"/>
+   <circle cx="420" cy="196" r="26" fill="${RED}"/>`],
 ];
 const svg=b=>`<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Theia icon">${b}</svg>`;
+// Recolour one icon for a background: swap the tile fill and the marks that would vanish on it.
+function recolour(b,mode){
+  const all=(t,x,y)=>t.split(x).join(y), first=t=>t.replace(/fill="[^"]+"/,'fill="BG"');
+  let t=first(b);
+  if(mode==='blue'){ t=all(t,BLUE,'#ffffff'); t=all(t,WHITE,'#ffffff'); t=all(t,BLACK,'#ffffff'); t=all(t,'#fff"','#ffffff"'); t=all(t,SHEET,BLUE); t=all(t,RULE,'rgba(255,255,255,.35)'); t=all(t,GREY2,'#ffffff'); t=all(t,'BG',BLUE); }
+  else if(mode==='white'){ t=all(t,WHITE,BLACK); t=all(t,'#fff"',BLACK+'"'); t=all(t,SHEET,'#ffffff'); t=all(t,GREY2,GREY); t=all(t,'BG','#ffffff'); }
+  else t=b;
+  return t;
+}
 document.getElementById('m').innerHTML=icons.map(([n,d,b])=>`<section>
-  <h2>${n}</h2><div class="big">${svg(b)}</div><p>${d}</p>
-  <div class="row"><div class="home"><div class="sm">${svg(b)}</div>Theia</div>
-  <div class="dark"><div class="home"><div class="sm">${svg(b)}</div>Theia</div></div></div>
+  <h2>${n}</h2>
+  <div class="row">${['orig','blue','white'].map(m=>`<div class="tile ${m}">${svg(recolour(b,m))}</div>`).join('')}</div>
+  <p>${d}</p>
 </section>`).join('');
 </script>
 </body>
