@@ -11,6 +11,7 @@ npm install
 npm run dev     # http://localhost:5173
 npm test        # engine tests (node:test)
 npm run lint
+npm run typecheck
 ```
 
 ## Layout and design system
@@ -33,4 +34,4 @@ npx wrangler login   # once
 npm run deploy
 ```
 
-The whole site is behind one shared password, checked on Cloudflare before any file is served (`functions/_middleware.js`). Any username works. To change the password: `npx wrangler pages secret put APP_PASSWORD --project-name theia-app`, then deploy again.
+The whole site is behind one shared password, checked on Cloudflare before any file is served (`functions/_middleware.ts`). Any username works. To change the password: `npx wrangler pages secret put APP_PASSWORD --project-name theia-app`, then deploy again.

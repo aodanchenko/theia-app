@@ -19,6 +19,7 @@ Runs fully in the browser. No backend.
 npm run dev      # http://localhost:5173 (/, /space, /earth)
 npm test         # node:test, engine + functions
 npm run lint     # oxlint
+npm run typecheck  # tsc (also runs in build)
 npm run build
 npm run deploy   # Cloudflare Pages, behind a shared password
 ```
@@ -27,17 +28,18 @@ npm run deploy   # Cloudflare Pages, behind a shared password
 
 ```
 src/
-  main.jsx              entry + routes: / (home), /space, /earth. Sets the theme per route.
+  main.tsx              entry + routes: / (home), /space, /earth. Sets the theme per route.
   design/tokens.css     design system: tokens, reset, motion. The only global CSS.
   components/
-    SimulatedCamera.jsx  drawn stand-in for the camera (both modes)
+    SimulatedCamera.tsx  drawn stand-in for the camera (both modes)
     space/               workbench components
     earth/               coach screen components
   pages/                 HomePage, SpacePage, EarthPage
-  data/demo.js           simulated session data. Replace with engine output.
-  engine/                features (plain JS, no React/DOM, must run in Node)
+  types.ts              shared data shapes (Session, Parameter, Limits, Vital, OverlayTag)
+  data/demo.ts           simulated session data. Replace with engine output.
+  engine/                features (plain TS, no React/DOM, must run in Node)
   capture/               useCameraStream (camera on/off), PoseCamera (camera + MediaPipe Pose, not wired in yet)
-  store.js               the only file that touches storage
+  store.ts               the only file that touches storage
 functions/               Cloudflare Pages middleware (password)
 ```
 
@@ -45,7 +47,7 @@ functions/               Cloudflare Pages middleware (password)
 
 ### Themes
 
-`src/main.jsx` sets `document.documentElement.dataset.theme` to `space` or `earth` per route. Components never hard-code a theme; they read tokens.
+`src/main.tsx` sets `document.documentElement.dataset.theme` to `space` or `earth` per route. Components never hard-code a theme; they read tokens.
 
 | Token | Meaning | Space | Earth |
 |---|---|---|---|
@@ -83,7 +85,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 
 ## Components
 
-Each component is one `.jsx` file plus a `.module.css` next to it. Props are plain data; components do no fetching and hold no app state.
+Each component is one `.tsx` file plus a `.module.css` next to it. Props are plain data; components do no fetching and hold no app state.
 
 | Component | Props | Notes |
 |---|---|---|
@@ -109,7 +111,9 @@ Each component is one `.jsx` file plus a `.module.css` next to it. Props are pla
 
 ## Code rules
 
-- Plain JS + React 19, Vite, CSS Modules. No TypeScript, no CSS framework, no UI library.
+- TypeScript (strict) + React 19, Vite, CSS Modules. No CSS framework, no UI library.
+- Shared data shapes live in `src/types.ts`; type props inline or with a local `Props` interface. Avoid `any` and `!`.
+- Imports use real extensions (`./x.ts`, `./X.tsx`): Node runs the `.ts` tests directly, without a build step.
 - Smallest change that works. No abstraction, option or wrapper nobody asked for.
 - A new component: reuse tokens; add a token only if a value means something new, and add it to both themes when both need it.
 - Comments say *why*, in one line. No commented-out code.
