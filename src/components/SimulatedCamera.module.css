@@ -1,4 +1,6 @@
 .camera { display: block; width: 100%; height: 100%; }
+/* photo recedes: near-grey and dim, so colour (red flag, blue method) and the white skeleton belong to the UI */
+.photo { filter: grayscale(.85) brightness(.5) contrast(.85); }
 .skeleton { stroke: rgba(255, 255, 255, .8); fill: rgba(255, 255, 255, .8); }
 .cue { stroke: var(--cue); }
 .cue path { stroke: var(--cue); }

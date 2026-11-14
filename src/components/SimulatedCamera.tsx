@@ -69,7 +69,7 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
       {scene && !photo && <rect y={ty + 470 * scale} width={width} height={height} fill={palette.ground} />}
 
       <g transform={`translate(${tx},${ty}) scale(${scale})`}>
-        {scene && photo && <image href={PHOTO.href} width={PHOTO.w} height={PHOTO.h} />}
+        {scene && photo && <image className={styles.photo} href={PHOTO.href} width={PHOTO.w} height={PHOTO.h} />}
         {scene && !photo && (
           <g filter={`url(#${id}blur)`} opacity=".92" fill={palette.body}>
             {BONES.map(([a, b]) => <Bone key={a + b} pose={pose} from={a} to={b} stroke={palette.body} strokeWidth="30" />)}
