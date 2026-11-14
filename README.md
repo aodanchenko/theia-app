@@ -29,3 +29,14 @@ npm run lint
 - Triage and guidance only, never prescription. Every flag carries a cited action.
 - Simulated data is labelled "simulated" in the UI.
 - Never commit raw video or datasets.
+
+## Deploy
+
+Hosted on Cloudflare Pages: https://theia-app.pages.dev
+
+```sh
+npx wrangler login   # once
+npm run deploy
+```
+
+The whole site is behind one shared password, checked on Cloudflare before any file is served (`functions/_middleware.js`). Any username works. To change the password: `npx wrangler pages secret put APP_PASSWORD --project-name theia-app`, then deploy again.

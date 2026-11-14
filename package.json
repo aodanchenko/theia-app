@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test 'src/**/*.test.js'"
+    "test": "node --test 'src/**/*.test.js' 'functions/*.test.js'",
+    "deploy": "npm run build && npx --yes wrangler@4 pages deploy dist --project-name theia-app --branch main"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.2.3",
