@@ -3,7 +3,7 @@ import { DrawingUtils, FilesetResolver, PoseLandmarker, type Landmark } from '@m
 
 // shortcut: wasm and model load from the internet on first use; copy them into public/ for fully offline use.
 const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
-const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
+const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task'
 
 // While `enabled`, runs MediaPipe Pose on the playing <video>, draws the skeleton on the canvas, and calls onPose
 // with the 33 world landmarks (metres) for every frame with a person in it. Video never leaves the device.

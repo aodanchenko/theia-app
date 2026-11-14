@@ -110,6 +110,7 @@ export function meanFeatures(reps: RepFeatures[]): RepFeatures {
 
 // MediaPipe's own jitter per feature: sd over 16 identical reps (same two NASA photos looped as a fake camera),
 // doubled because a still photo is the best case for a live camera.
+// shortcut: measured with the lite pose model; the app now runs full (less jitter), so this is conservative. Re-measure before tuning.
 export const MEDIAPIPE_NOISE: RepFeatures = { depth: 2 * 2.7, kneeWidth: 2 * 0.061, trunkLean: 2 * 0.44, asymmetry: 2 * 1.5 }
 
 // The rehab scale (lab markers) widened by camera noise: sd = √(sd_rehab² + noise²).
