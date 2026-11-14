@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import styles from './Workbench.module.css'
 
-// Tablet layout: header, toolbar, then camera | side panels.
-export default function Workbench({ header, toolbar, camera, side }: Record<'header' | 'toolbar' | 'camera' | 'side', ReactNode>) {
+// Tablet layout: header, toolbar, camera | side panels, status bar.
+export default function Workbench({ header, toolbar, camera, side, status }: Record<'header' | 'toolbar' | 'camera' | 'side' | 'status', ReactNode>) {
   return (
     <div className={styles.workbench}>
       {header}
@@ -11,6 +11,7 @@ export default function Workbench({ header, toolbar, camera, side }: Record<'hea
         {camera}
         <div className={styles.side}>{side}</div>
       </div>
+      {status}
     </div>
   )
 }

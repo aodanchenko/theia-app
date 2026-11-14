@@ -4,7 +4,10 @@ import useCameraStream from '../capture/useCameraStream.ts'
 import SimulatedCamera from '../components/SimulatedCamera.tsx'
 import CameraPanel from '../components/space/CameraPanel.tsx'
 import Header from '../components/space/Header.tsx'
-import { ToolButton, ToolNote, Toolbar } from '../components/space/Toolbar.tsx'
+import HelpDialog, { type HelpTopic } from '../components/space/HelpDialog.tsx'
+import Menu from '../components/space/Menu.tsx'
+import StatusBar from '../components/space/StatusBar.tsx'
+import { ToolButton, ToolGroup, ToolNote, Toolbar } from '../components/space/Toolbar.tsx'
 import ModelCheck from '../components/space/ModelCheck.tsx'
 import Panel from '../components/space/Panel.tsx'
 import ParameterSheet from '../components/space/ParameterSheet.tsx'
@@ -55,7 +58,8 @@ function recommend(live: ReturnType<typeof liveView> | null, n: number, tracking
   if (live && !live.baseline) return { decision: 'Calibrating', action: `Squat normally · ${n}/${CALIBRATION}`, reason: `The first ${CALIBRATION} reps set your personal baseline`, tone: 'neutral' }
   if (live?.result) return { decision: 'Continue', action: 'Good rep', reason: `Rep ${n} within your baseline (worst: ${LABELS[live.result.worst]}, ${z(live.result.score)})`, tone: 'good' }
   if (live) return { decision: 'Baseline set', action: 'Continue the set', reason: `Next reps are compared with your first ${CALIBRATION}`, tone: 'good' }
-  if (tracking) return { decision: 'Ready', action: tracking.startsWith('LEGS') ? 'Step back, show your legs' : 'Squat to start', reason: tracking, tone: 'neutral' }
+  if (tracking?.startsWith('LEGS')) return { decision: 'Framing', action: 'Step back, show your legs', reason: 'Hips and knees must be visible to score a rep', tone: 'caution' }
+  if (tracking) return { decision: 'Ready', action: 'Squat to start', reason: tracking, tone: 'neutral' }
   return { decision: 'Change technique', action: s.cue, reason: `SIMULATED · rep 6 R knee valgus past rehab limit · repeat rep 8, then ${s.nextLoadKg} kg`, tone: 'alert' }
 }
 
@@ -73,6 +77,9 @@ export default function SpacePage() {
   const [reps, setReps] = useState<RepFeatures[]>([])
   const newDetector = () => createRepDetector(MEDIAPIPE_UP, (f) => setReps((r) => [...r, f]))
   const [detect, setDetect] = useState(newDetector) // replaced on Reset baseline, so a half-done rep is dropped too
+  const [view, setView] = useState({ tags: true, chart: true, model: true, vitals: true })
+  const toggle = (k: keyof typeof view) => () => setView((v) => ({ ...v, [k]: !v[k] }))
+  const [help, setHelp] = useState<HelpTopic | null>(null)
   const [tracking, setTracking] = useState<string | null>(null) // null until the pose model sees someone
   const onPose = useCallback((world: Landmark[]) => {
     const sk = fromMediaPipe(world)
@@ -89,15 +96,30 @@ export default function SpacePage() {
 
   return (
     <Workbench
-      header={<Header title="THEIA" file={s.file} />}
+      header={
+        <Header title="THEIA Workbench" file={s.file}>
+          <Menu label="View" items={[
+            { label: 'Joint tags (simulated view)', checked: view.tags, onSelect: toggle('tags') },
+            { label: 'Rep chart', checked: view.chart, onSelect: toggle('chart') },
+            { label: 'Rehab model check', checked: view.model, onSelect: toggle('model') },
+            { label: 'Vitals', checked: view.vitals, onSelect: toggle('vitals') },
+          ]} />
+          <Menu label="Help" items={[
+            { label: 'How Theia decides', onSelect: () => setHelp('decide') },
+            { label: 'Data & privacy', onSelect: () => setHelp('privacy') },
+          ]} />
+        </Header>
+      }
       toolbar={
         <Toolbar>
-          {camera.status === 'on'
-            ? <ToolButton onClick={camera.stop}>Stop camera</ToolButton>
-            : <ToolButton camera onClick={camera.start} disabled={camera.status === 'starting'}>{camera.status === 'starting' ? 'Starting…' : 'Enable camera'}</ToolButton>}
-          <ToolButton onClick={() => { setReps([]); setDetect(newDetector) }} disabled={reps.length === 0}>Reset baseline</ToolButton>
-          <ToolButton onClick={() => download(`theia-reps-${new Date().toISOString().slice(0, 16).replace(':', '-')}.csv`, repsCsv(reps, CALIBRATION, LIVE_MODEL, THRESHOLD))} disabled={reps.length === 0}>Export CSV</ToolButton>
-          {camera.error && <ToolNote alert>{camera.error}</ToolNote>}
+          <ToolGroup>
+            {camera.status === 'on'
+              ? <ToolButton onClick={camera.stop}>■ Stop camera</ToolButton>
+              : <ToolButton camera onClick={camera.start} disabled={camera.status === 'starting'}>{camera.status === 'starting' ? 'Starting…' : '● Enable camera'}</ToolButton>}
+            <ToolButton onClick={() => { setReps([]); setDetect(newDetector) }} disabled={reps.length === 0}>↺ Reset baseline</ToolButton>
+            <ToolButton onClick={() => download(`theia-reps-${new Date().toISOString().slice(0, 16).replace(':', '-')}.csv`, repsCsv(reps, CALIBRATION, LIVE_MODEL, THRESHOLD))} disabled={reps.length === 0}>⤓ Export CSV</ToolButton>
+          </ToolGroup>
+          {camera.error && <ToolNote caution>{camera.error}</ToolNote>}
           {!camera.error && <ToolNote>{reps.length ? `${reps.length} reps · video stays on device` : 'Video stays on device'}</ToolNote>}
         </Toolbar>
       }
@@ -107,13 +129,14 @@ export default function SpacePage() {
           caption={live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`SET ${s.set} · REP ${s.rep}/${s.reps} · ${s.loadKg} KG`]}
           onPose={onPose}
         >
-          {(cam) => (cam ? null : <SimulatedCamera theme="space" width={520} height={548} scene tags={OVERLAY_TAGS} ruler />)}
+          {(cam) => (cam ? null : <SimulatedCamera theme="space" width={520} height={548} scene tags={view.tags ? OVERLAY_TAGS : []} ruler={view.tags} />)}
         </CameraPanel>
       }
       side={
         <>
           <Recommendation {...rec} basis={basis} id={`${reps.length}-${rec.decision}`} />
           <ParameterSheet rows={live?.rows ?? PARAMETERS} />
+          {view.model && (
           <Panel title="Rehab model check · deep squat" note="UI-PRMD · PDDL 1.0" delay={60}>
             <ModelCheck
               rows={[
@@ -125,21 +148,33 @@ export default function SpacePage() {
               caption={`Incorrect reps caught at ${pct(EVAL.falseAlertRate)} false alerts, people held out. ${EVAL.subjects} people, ${EVAL.correctReps} good + ${EVAL.incorrectReps} bad reps (Vicon). Untuned 2 sd: ${pct(EVAL.personal.at2sd.caught)} caught, ${pct(EVAL.personal.at2sd.falseAlerts)} false alerts.`}
             />
           </Panel>
-          {live
+          )}
+          {view.chart && (live
             ? (
-              <Panel title="Worst deviation by rep · live" note={`after ${CALIBRATION} baseline reps`} delay={90}>
+              <Panel title="Worst deviation by rep · live" note={`after ${CALIBRATION} baseline reps`} delay={90} grow>
                 <RepChart values={live.scores} total={Math.max(10, live.scores.length)} limits={LIVE_LIMITS} unit=" sd" label="Worst deviation from your baseline per rep, in sd" />
               </Panel>
             )
             : (
-              <Panel title={`R knee valgus by rep · set ${s.set}`} note="SIMULATED" delay={90}>
+              <Panel title={`R knee valgus by rep · set ${s.set}`} note="SIMULATED" delay={90} grow>
                 <RepChart values={VALGUS_BY_REP} total={s.reps} limits={VALGUS_LIMITS} label="Right knee valgus per rep" />
               </Panel>
-            )}
+            ))}
+          {view.vitals && (
           <Panel title="Vitals" note={`SIMULATED · base: personal, ${s.baselineSessions} sessions`} delay={180}>
             <VitalsGrid vitals={VITALS} />
           </Panel>
+          )}
+          <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD} />
         </>
+      }
+      status={
+        <StatusBar
+          items={live
+            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.scores.filter((x) => x > LIVE_LIMITS.rehab).length}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, 'VIDEO ON DEVICE']
+            : [`REP ${s.rep}/${s.reps}`, `LOAD ${s.loadKg} KG`, `MD ${s.missionDay}`, 'FLAGS 2 · SIMULATED']}
+          next={`Next: ${rec.tone === 'alert' ? `${rec.action.toLowerCase()} · repeat the rep` : rec.action.toLowerCase()}`}
+        />
       }
     />
   )

@@ -11,6 +11,11 @@ export function ToolButton({ onClick, disabled, camera, children }: { onClick: (
   return <button type="button" className={styles.button} data-camera={camera || undefined} onClick={onClick} disabled={disabled}>{children}</button>
 }
 
-export function ToolNote({ alert, children }: { alert?: boolean; children: ReactNode }) {
-  return <span className={styles.note} data-alert={alert || undefined} role="status">{children}</span>
+// Sunken tray holding related buttons (the run controls).
+export function ToolGroup({ children }: { children: ReactNode }) {
+  return <div className={styles.group}>{children}</div>
+}
+
+export function ToolNote({ caution, children }: { caution?: boolean; children: ReactNode }) {
+  return <span className={styles.note} data-caution={caution || undefined} role="status">{children}</span>
 }

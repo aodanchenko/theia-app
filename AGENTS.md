@@ -60,11 +60,13 @@ scripts/                 offline tools (train-squat.ts)
 | `--ink` / `--ink-2` / `--muted` | text, strong → weak | #1d1f23 / #3a3d43 / #6b6e75 | #1c1a17 / – / #625a4e |
 | `--rule` | 1px lines | #d4d4d6 | #d8cfbf |
 | `--surface-head` | title strips, table header rows, toolbar | #ebebed | – |
-| `--raised` / `--pressed` / `--sunken` | bevels: buttons / button :active / readouts (number cells, bar tracks, vital tiles) | 1px inset shadows | – |
-| `--accent` | highlight (our method, sparklines, focus) | NASA blue #0062b3 | – |
+| `--raised` / `--pressed` / `--sunken` / `--groove` | bevels: buttons / button :active / readouts (number cells, bar tracks, vital tiles) / lit lip under a rule (header→toolbar seam) | shadow stacks; `--raised`/`--pressed` include a 1px ring, so those controls take **no border** | – |
+| `--engraved` / `--engraved-dark` | text-shadow for labels cut into a light / dark or red panel | 1px white below / 1px black above | – |
+| `--accent` | our method in charts, nothing else | NASA blue #0062b3 | – |
 | `--alert` | flags only | NASA red #fc3b30 | #b4560f |
 | `--cue` | overlay drawn on the camera | NASA red | #f0a24a |
-| `--good` / `--good-band` | baseline label / band | green | – |
+| `--good` / `--good-band` | normal, within baseline (phosphor green); live skeleton joints | #12803a | #2f7a4b |
+| `--caution` | needs attention, not a health flag: camera errors, framing | amber #b26f00 | – |
 | `--mark` / `--mark-empty` | neutral chart marks | greys | – |
 | `--font-body` | body font | IBM Plex Sans | Atkinson Hyperlegible |
 | `--font-mono` | numbers, codes, captions | IBM Plex Mono | – |
@@ -75,6 +77,8 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 ### Rules
 
 - **Colour comes from tokens.** No hex in components. The exception is `SimulatedCamera`'s scene palette (wall, floor, body), which is an illustration.
+- **Five colours (Space):** panel greys, ink black, phosphor green (`--good`), amber (`--caution`), red (`--alert`). Blue (`--accent`) only marks our method in charts. Sparklines and focus rings are ink.
+- **Labels are engraved placards (Space):** panel titles, table headers, vital names, button labels and the app name are sans, 600, uppercase, letter-spacing .08–.2em, `text-shadow: var(--engraved)`, on a grey panel (the cut only shows on grey, not white). Values and data stay mono, never engraved.
 - **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone. One exception: the red **Enable camera** button (`--nasa-red`).
 - **Numbers are monospace and tabular** (`--font-mono`, `font-variant-numeric: tabular-nums`), right-aligned in tables.
 - **Space is dense, with subtle bevels:** 1px `--rule` borders, 3px radius at most, 10–12px type. Depth only via the bevel tokens (raised controls, sunken readouts, grey caps title strips), never drop shadows or gradients. The one exception is the Recommendation panel (20 / 44px).
@@ -86,7 +90,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 
 - **Space** = the "THEIA Workbench" look: slim header, large camera with joint tags and a depth ruler, a large recommendation on top of the side column, a parameter table, valgus-per-rep chart with rehab vs base model thresholds, simulated vitals with sparklines. NASA palette: red #fc3b30, blue #0062b3, black #000815.
 - **Earth** = "on the body": full-screen camera with a subtle skeleton, one cue card on top ("Push your right knee out"), an arrow at the joint, a huge rep count bottom-left, a round Stop button bottom-right. Atkinson Hyperlegible, warm paper colours.
-- **Cut (14 Nov review):** menu bar, decorative toolbar chips (Live/Pause), formula bar, spreadsheet letters/row numbers, status bar, sheet tabs: decoration or dead controls. Baseline / model / known cause moved into the recommendation's `basis` line; the camera cue banner merged into the recommendation.
+- **Cut (14 Nov review):** fake menus (File, Edit, Data, Model), decorative toolbar chips (Live/Pause), formula bar, spreadsheet letters/row numbers, sheet tabs: decoration or dead controls. Brought back working: View (panel toggles) and Help (dialogs) menus, the blue status bar. Baseline / model / known cause moved into the recommendation's `basis` line; the camera cue banner merged into the recommendation.
 - **Rejected:** a text-heavy "procedure" bottom sheet; a spirit-level instrument (takes the bottom third from the camera); a 1970s printout look for Earth (not accessible enough); visual reskins of Space (hairline, mission control dark, flight data file, soft lab): the original stays.
 
 ## Components
@@ -97,14 +101,17 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 |---|---|---|
 | `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `scene`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`; joints: `rk`, `rh`, `rs` …; `scene={false}` draws only the overlay |
 | **space/** | | |
-| `Workbench` | `header`, `toolbar`, `camera`, `side` (nodes) | Grid shell of the tablet screen |
-| `Header` | `title`, `file` | One slim row: app name, session file |
-| `Toolbar`, `ToolButton`, `ToolNote` | `ToolButton`: `onClick`, `disabled`, `camera`; `ToolNote`: `alert` | Working controls only: Enable/stop camera (`camera` = red), Reset baseline, Export CSV. No decorative chips |
+| `Workbench` | `header`, `toolbar`, `camera`, `side`, `status` (nodes) | Grid shell of the tablet screen; the side column scrolls |
+| `Header` | `title`, `file`, children (menus) | Title bar: app name, menus, session file |
+| `Menu` | `label`, `items[]` | Menu-bar dropdown. Item: `{ label, checked?, onSelect }`; `checked` = View toggle. Closes on pick, outside click, Escape |
+| `HelpDialog` | `topic`, `onClose`, `calibration`, `threshold` | Native `<dialog>` for Help: how Theia decides, data & privacy |
+| `StatusBar` | `items[]`, `next` | Blue bottom bar: rep, load, flags; next step on the right |
+| `Toolbar`, `ToolGroup`, `ToolButton`, `ToolNote` | `ToolButton`: `onClick`, `disabled`, `camera`; `ToolNote`: `caution` | `ToolGroup` = sunken tray for the run controls (● camera, ↺ reset, ⤓ export). Working controls only: Enable/stop camera (`camera` = red), Reset baseline, Export CSV. No decorative chips |
 | `CameraPanel` | `stream`, `caption[]`, `onPose`, `children(live)` | Shows the `stream` (camera on/off lives in the toolbar) with the MediaPipe skeleton, `onPose(worldLandmarks)` per frame. Caption top-right (empty lines skipped) |
 | `Recommendation` | `decision`, `action`, `reason`, `basis`, `tone`, `id` | Top of the side column, large text readable from the rack. `tone`: `alert` (▲) / `good` (✓) / `neutral`; a new `id` replays the entrance |
 | `ModelCheck` | `rows[]`, `caption` | Row: `{ label, caught, ours? }`. Bars = share of bad reps caught at the same false-alert rate |
 | `ParameterSheet` | `rows[]` | Row: `{ name, now, base, delta, flag? }`. Flagged rows turn `--alert` |
-| `Panel` | `title`, `note`, `delay`, children | Titled section in the side column |
+| `Panel` | `title`, `note`, `delay`, `grow`, children | Titled section in the side column; `grow` takes spare height (rep chart) |
 | `RepChart` | `values[]`, `total`, `limits`, `label`, `unit` (default `°`) | `limits`: `{ baseline: [lo, hi], rehab, base? }`. Bars ≥ rehab are flagged; no `base` line when omitted. Values in 0..13 |
 | `VitalsGrid` | `vitals[]` | Item: `{ name, value, unit, alert?, expected?, trend[] }`. `expected` = a known cause (e.g. exercise) explains it: shown grey with the cause, never red |
 | `Sparkline` | `points[]`, `alert` | Points in 0..16 |
