@@ -73,6 +73,8 @@
   --text-lg: 30px;
   --text-xl: 96px;
 }
+/* Earth "Bigger text" (Settings / About you). */
+[data-theme="earth"][data-big-text] { --text-md: 22px; --text-lg: 38px; --text-xl: 120px; }
 
 * { box-sizing: border-box; margin: 0; }
 html, body { -webkit-font-smoothing: antialiased; font-synthesis: none; }
