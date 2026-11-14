@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Theia",
+  "short_name": "Theia",
+  "description": "Camera movement coach for rehab on Earth and exercise in space.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" },
+    { "src": "/icon-mask.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}
