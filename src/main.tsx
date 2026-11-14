@@ -1,4 +1,4 @@
-import { StrictMode, type ComponentType } from 'react'
+import { lazy, StrictMode, Suspense, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
 import './design/tokens.css'
 import EarthPage from './pages/EarthPage.tsx'
@@ -11,6 +11,11 @@ const ROUTES: Record<string, { title: string; theme: Theme; Page: ComponentType 
   '/': { title: 'Theia', theme: 'space', Page: HomePage },
   '/space': { title: 'Theia · Space', theme: 'space', Page: SpacePage },
   '/earth': { title: 'Theia · Earth', theme: 'earth', Page: EarthPage },
+  // Throwaway design prototypes, dev server only (never in the production bundle).
+  ...(import.meta.env.DEV ? {
+    '/proto/space': { title: 'Theia · Space prototypes', theme: 'space' as Theme, Page: lazy(() => import('./proto/space/Harness.tsx')) },
+    '/proto/sounds': { title: 'Theia · Rep sounds', theme: 'space' as Theme, Page: lazy(() => import('./proto/sounds/SoundsLab.tsx')) },
+  } : {}),
 }
 
 const route = ROUTES[location.pathname.replace(/\/+$/, '') || '/'] ?? ROUTES['/']
@@ -19,6 +24,8 @@ document.documentElement.dataset.theme = route.theme
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <route.Page />
+    <Suspense>
+      <route.Page />
+    </Suspense>
   </StrictMode>,
 )
