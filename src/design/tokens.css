@@ -23,6 +23,10 @@
   --ink-2: #3a3d43;
   --muted: #6b6e75;
   --rule: #d4d4d6;
+  --surface-head: #ebebed;    /* title strips, header rows, toolbar */
+  --raised: inset 1px 1px 0 rgba(255, 255, 255, .95), inset -1px -1px 0 rgba(0, 0, 0, .14);  /* buttons */
+  --pressed: inset 1px 1px 0 rgba(0, 0, 0, .14), inset -1px -1px 0 rgba(255, 255, 255, .95); /* button :active */
+  --sunken: inset 1px 1px 1px rgba(0, 0, 0, .08);  /* readouts: number cells, tracks, value tiles */
   --accent: var(--nasa-blue);
   --alert: var(--nasa-red);   /* flags, never decoration */
   --cue: var(--nasa-red);     /* overlay drawn on the camera */

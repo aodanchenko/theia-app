@@ -59,6 +59,8 @@ scripts/                 offline tools (train-squat.ts)
 | `--surface` | panels, cards | #fff | #f3eee4 |
 | `--ink` / `--ink-2` / `--muted` | text, strong → weak | #1d1f23 / #3a3d43 / #6b6e75 | #1c1a17 / – / #625a4e |
 | `--rule` | 1px lines | #d4d4d6 | #d8cfbf |
+| `--surface-head` | title strips, table header rows, toolbar | #ebebed | – |
+| `--raised` / `--pressed` / `--sunken` | bevels: buttons / button :active / readouts (number cells, bar tracks, vital tiles) | 1px inset shadows | – |
 | `--accent` | highlight (our method, sparklines, focus) | NASA blue #0062b3 | – |
 | `--alert` | flags only | NASA red #fc3b30 | #b4560f |
 | `--cue` | overlay drawn on the camera | NASA red | #f0a24a |
@@ -75,7 +77,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Colour comes from tokens.** No hex in components. The exception is `SimulatedCamera`'s scene palette (wall, floor, body), which is an illustration.
 - **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone. One exception: the red **Enable camera** button (`--nasa-red`).
 - **Numbers are monospace and tabular** (`--font-mono`, `font-variant-numeric: tabular-nums`), right-aligned in tables.
-- **Space is dense and flat:** 1px `--rule` borders, 3px radius at most, no shadows, 10–12px type. The one exception is the Recommendation panel (20 / 44px).
+- **Space is dense, with subtle bevels:** 1px `--rule` borders, 3px radius at most, 10–12px type. Depth only via the bevel tokens (raised controls, sunken readouts, grey caps title strips), never drop shadows or gradients. The one exception is the Recommendation panel (20 / 44px).
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
 - **Motion:** entrances only, once. Use the `enter` class (rise, optional `--delay` in ms) or `pop` (SVG overlays). `prefers-reduced-motion` turns them off. No `transition: all`.
 - **Anything simulated says so**, with the visible label `SIMULATED` (see Vitals).

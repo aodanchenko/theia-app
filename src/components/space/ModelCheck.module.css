@@ -2,7 +2,7 @@
 .check table { width: 100%; border-collapse: collapse; }
 .check th { width: 46%; padding: 2px 8px 2px 0; text-align: start; font-weight: 400; }
 .check tr[data-ours] th, .check tr[data-ours] .num { color: var(--ink); font-weight: 700; }
-.track { padding: 2px 0; }
+.track { padding: 2px; background: var(--bg); box-shadow: var(--sunken); }
 .bar { display: block; height: 8px; background: var(--mark); }
 .check tr[data-ours] .bar { background: var(--accent); }
 .num { width: 4ch; padding-inline-start: 8px; text-align: end; font-variant-numeric: tabular-nums; }
