@@ -1,6 +1,7 @@
 // Throwaway: compare per-rep sound sets at /proto/sounds (dev only). Files stream from their sources on click;
 // nothing is stored in the repo until one set is chosen.
 import { useRef, useState } from 'react'
+import { playChime } from '../../capture/chimes.ts'
 import './sounds.css'
 
 type Event = 'good' | 'flag' | 'baseline' | 'combo' | 'done'
@@ -41,7 +42,6 @@ const QUINDAR: Record<Event, [number, number, number, OscillatorType?][]> = {
 
 // --- 2 · Kenney Interface Sounds (CC0) ---
 const KENNEY = 'https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/master/addons/kenney_interface_sounds/'
-const KENNEY_FILES: Record<Event, string> = { good: 'confirmation_001.wav', flag: 'error_004.wav', baseline: 'maximize_006.wav', combo: 'confirmation_002.wav', done: 'confirmation_004.wav' }
 
 // --- 3 · NASA historical sounds (NASA media usage guidelines) ---
 const NASA = 'https://www.nasa.gov/wp-content/uploads/2015/01/'
@@ -70,11 +70,17 @@ function file(url: string, volume: number, maxMs = 0) {
   if (maxMs) { const a = current; cut = window.setTimeout(() => a.pause(), maxMs) }
 }
 
+// Kenney Interface Sounds (CC0): closest in character to the Material set.
+const KENNEY_CC0: Record<Event, string> = { good: 'confirmation_001.wav', flag: 'glass_002.wav', baseline: 'select_003.wav', combo: 'confirmation_002.wav', done: 'confirmation_004.wav' }
+const CHIME: Record<Event, 'good' | 'fix' | 'baseline' | 'streak' | 'done'> = { good: 'good', flag: 'fix', baseline: 'baseline', combo: 'streak', done: 'done' }
+
 const SETS: SoundSet[] = [
-  { name: 'Quindar, generated', note: 'Apollo radio beeps made in the browser: 2525 / 2475 Hz sine', license: 'No files, no licence', play: (e, v) => tones(QUINDAR[e], v), label: (e) => QUINDAR[e].map(([hz]) => `${hz} Hz`).join(' · ') },
-  { name: 'Kenney Interface', note: 'Clean neutral UI clicks and chimes', license: 'CC0 · kenney.nl', play: (e, v) => file(KENNEY + KENNEY_FILES[e], v), label: (e) => KENNEY_FILES[e] },
-  { name: 'NASA archive', note: 'Real mission audio, cut to the first seconds', license: 'NASA media guidelines', play: (e, v) => file(NASA + NASA_FILES[e][0], v, NASA_FILES[e][1]), label: (e) => NASA_FILES[e][0].replace(/^\d+main_/, '') },
-  { name: 'Google Material', note: 'Modern, soft, musical system sounds', license: 'CC-BY 4.0 · credit Google', play: (e, v) => file(MATERIAL + MATERIAL_FILES[e], v), label: (e) => MATERIAL_FILES[e] },
+  { name: 'Theia chimes · juicy', note: 'Struck marimba: mallet click, warm body, bell sparkle, a little room', license: 'Ours · OK for Space Apps', play: (e, v) => playChime(CHIME[e], v, 'juicy'), label: (e) => ({ good: 'E5 → A5', flag: 'A4 → F#4', baseline: 'C E G', combo: 'C E G C', done: 'C3 + C major, rising' })[e] },
+  { name: 'Theia chimes · soft', note: 'The first version: plain soft sine notes', license: 'Ours · OK for Space Apps', play: (e, v) => playChime(CHIME[e], v, 'soft'), label: (e) => ({ good: 'E5 → A5', flag: 'A4 → F#4', baseline: 'C E G', combo: 'C E G C', done: 'C major' })[e] },
+  { name: 'Kenney (CC0)', note: 'Closest Kenney files to the Material set', license: 'CC0 · OK for Space Apps', play: (e, v) => file(KENNEY + KENNEY_CC0[e], v), label: (e) => KENNEY_CC0[e] },
+  { name: 'Quindar, generated', note: 'Apollo radio beeps made in the browser: 2525 / 2475 Hz', license: 'Ours · OK for Space Apps', play: (e, v) => tones(QUINDAR[e], v), label: (e) => QUINDAR[e].map(([hz]) => `${hz} Hz`).join(' · ') },
+  { name: 'NASA archive', note: 'Real mission audio, cut to the first seconds', license: 'NASA · OK for Space Apps', play: (e, v) => file(NASA + NASA_FILES[e][0], v, NASA_FILES[e][1]), label: (e) => NASA_FILES[e][0].replace(/^\d+main_/, '') },
+  { name: 'Google Material', note: 'Reference only: CC-BY is not allowed in a Space Apps submission', license: 'CC-BY 4.0 · not OK for Space Apps', play: (e, v) => file(MATERIAL + MATERIAL_FILES[e], v), label: (e) => MATERIAL_FILES[e] },
 ]
 
 // A demo set: 3 calibration reps, 5 clean (combo), a flag, a clean last rep.
