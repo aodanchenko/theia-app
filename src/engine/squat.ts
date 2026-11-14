@@ -32,6 +32,9 @@ export const LABELS: Record<FeatureKey, string> = {
   asymmetry: 'L/R asymmetry',
 }
 
+// What went wrong, in a word or two (chart flags).
+export const SHORT: Record<FeatureKey, string> = { depth: 'SHALLOW', kneeWidth: 'KNEES IN', trunkLean: 'TRUNK', asymmetry: 'L/R' }
+
 export const CUES: Record<FeatureKey, string> = {
   depth: 'Go deeper',
   kneeWidth: 'Knees out',

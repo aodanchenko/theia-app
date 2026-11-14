@@ -120,7 +120,8 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `ModelCheck` | `rows[]`, `caption` | Row: `{ label, caught, ours? }`. Bars = share of bad reps caught at the same false-alert rate |
 | `ParameterSheet` | `rows[]` | Row: `{ name, now, base, delta, flag? }`. Flagged rows turn `--alert` |
 | `Panel` | `title`, `note`, `delay`, `grow`, children | Titled section in the side column; `grow` takes spare height (rep chart) |
-| `RepChart` | `values[]`, `total`, `limits`, `label`, `unit` (default `°`) | `limits`: `{ baseline: [lo, hi], rehab, base? }`. Bars ≥ rehab are flagged; no `base` line when omitted. Values in 0..13 |
+| `DriftChart` | `points[]`, `total`, `label` | Form drift per rep (line + dot per rep). Point: `{ drift, calibration?, flag? }`; drift = worst one-sided z ÷ flag threshold, so 1.0 = flag; axis tops out at 2 (bigger values pinned, value written). Live: your reps; camera off: a held-out UI-PRMD person (`REPLAY` in `squatModel.ts`) |
+| `RepChart` (prototypes only) | `values[]`, `total`, `limits`, `label`, `unit` (default `°`) | `limits`: `{ baseline: [lo, hi], rehab, base? }`. Bars ≥ rehab are flagged; no `base` line when omitted. Values in 0..13 |
 | `VitalsGrid` | `vitals[]` | Instrument tiles: name + status lamp (Normal / Expected / Watch / ▲ Flag), value in a recessed window, trend over the personal baseline band. Item: `{ name, value, unit, status, cause?, base?, trend?, domain?, source? }` (see `types.ts`). `expected` = outside baseline but a known cause explains it: never red |
 | `Sparkline` | `points[]`, `domain`, `band?`, `status` | Values in real units scaled to `domain`; `band` = baseline range; last point is a dot coloured by status |
 | **earth/** | | |

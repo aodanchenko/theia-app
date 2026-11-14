@@ -14,13 +14,13 @@ import Panel from '../components/space/Panel.tsx'
 import ParameterSheet from '../components/space/ParameterSheet.tsx'
 import RotateGate from '../components/space/RotateGate.tsx'
 import Recommendation, { type Tone } from '../components/space/Recommendation.tsx'
-import RepChart from '../components/space/RepChart.tsx'
+import DriftChart, { type DriftPoint } from '../components/space/DriftChart.tsx'
 import VitalsGrid from '../components/space/VitalsGrid.tsx'
 import Workbench from '../components/space/Workbench.tsx'
-import { OVERLAY_TAGS, PARAMETERS, SESSION, VALGUS_BY_REP, VALGUS_LIMITS } from '../data/demo.ts'
-import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, withNoise, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
-import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
-import type { Limits, Parameter } from '../types.ts'
+import { OVERLAY_TAGS, PARAMETERS, SESSION } from '../data/demo.ts'
+import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, SHORT, withNoise, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
+import { EVAL, REHAB_MODEL, REPLAY } from '../engine/squatModel.ts'
+import type { Parameter } from '../types.ts'
 
 const s = SESSION
 const CALIBRATION = 3 // shortcut: the first reps of the session are the personal baseline; later, load it from past sessions.
@@ -28,7 +28,9 @@ const THRESHOLD = EVAL.personal.threshold // z at 10% false alerts on held-out p
 const LIVE_MODEL = withNoise(REHAB_MODEL, MEDIAPIPE_NOISE)
 const POPULATION: RepFeatures = { depth: REHAB_MODEL.depth.mean, kneeWidth: REHAB_MODEL.kneeWidth.mean, trunkLean: REHAB_MODEL.trunkLean.mean, asymmetry: REHAB_MODEL.asymmetry.mean }
 const pct = (x: number) => `${Math.round(x * 100)}%`
-const LIVE_LIMITS: Limits = { baseline: [0, 1], rehab: +THRESHOLD.toFixed(1) } // in sd from the personal baseline
+const drift = (score: number) => Math.max(0, score) / THRESHOLD // 0 = your normal, 1 = flag
+// Before the camera is on: a real held-out UI-PRMD person, scored the same way (see scripts/train-squat.ts).
+const REPLAY_POINTS: DriftPoint[] = REPLAY.reps.map((r, i) => ({ drift: drift(r.score), calibration: i < REPLAY.calibration, flag: SHORT[r.worst] }))
 
 const fmt = (k: FeatureKey, v: number) => (k === 'kneeWidth' ? v.toFixed(2) : `${Math.round(v)}°`)
 const signed = (k: FeatureKey, v: number) => { const t = k === 'kneeWidth' ? v.toFixed(2) : `${Math.round(v)}`; return v > 0 ? `+${t}` : t.replace('-', '−') }
@@ -38,7 +40,9 @@ function liveView(reps: RepFeatures[]) {
   const last = reps[reps.length - 1]
   const baseline = reps.length >= CALIBRATION ? meanFeatures(reps.slice(0, CALIBRATION)) : null
   const center = baseline ?? POPULATION
-  const scored = baseline ? reps.slice(CALIBRATION).map((f) => scoreRep(f, LIVE_MODEL, baseline)) : []
+  // calibration reps are scored too, against the baseline they set, so the chart shows their spread
+  const all = baseline ? reps.map((f) => scoreRep(f, LIVE_MODEL, baseline)) : []
+  const scored = all.slice(CALIBRATION)
   const result = scored.at(-1)
   const flagged = result !== undefined && result.score > THRESHOLD ? result.worst : null
   const rows: Parameter[] = FEATURES.map((k) => ({
@@ -49,8 +53,11 @@ function liveView(reps: RepFeatures[]) {
     flag: result && result.z[k] > THRESHOLD ? 'rehab' : undefined,
   }))
   const state = !baseline ? `CALIBRATING ${reps.length}/${CALIBRATION}` : !result ? 'BASELINE SET' : flagged ? 'FLAGGED' : 'GOOD REP'
-  const scores = scored.map((r) => Math.min(13, Math.max(0, +r.score.toFixed(1)))) // clamp to the chart's range
-  return { rows, flagged, baseline, state, result, scores }
+  const points: DriftPoint[] = baseline
+    ? all.map((r, i) => ({ drift: drift(r.score), calibration: i < CALIBRATION, flag: SHORT[r.worst] }))
+    : reps.map(() => ({ drift: 0, calibration: true }))
+  const flags = scored.filter((r) => r.score > THRESHOLD).length
+  return { rows, flagged, baseline, state, result, points, flags }
 }
 
 // The one thing to do now, for the large recommendation panel.
@@ -92,6 +99,7 @@ export default function SpacePage() {
   }, [detect])
   const live = reps.length > 0 ? liveView(reps) : null
   const vitals = useSimVitals(camera.status === 'on', reps.length)
+
   const rec = recommend(live, reps.length, tracking)
   const basis = live
     ? `vs your baseline (first ${CALIBRATION} reps) · UI-PRMD rehab scale · known cause: ${s.knownCause}`
@@ -140,6 +148,22 @@ export default function SpacePage() {
       side={
         <>
           <Recommendation {...rec} basis={basis} id={`${reps.length}-${rec.decision}`} />
+          {view.chart && (live
+            ? (
+              <Panel title="Form drift by rep · live" note={`first ${CALIBRATION} reps = baseline`} delay={90} grow>
+                <DriftChart points={live.points} total={Math.max(10, live.points.length)} label="Form drift per rep: worst deviation from your baseline, 1.0 = flag" />
+              </Panel>
+            )
+            : (
+              <Panel title="Form drift by rep · replay" note={`UI-PRMD person ${REPLAY.subject.slice(1)}, held out · 3 bad reps acted`} delay={90} grow>
+                <DriftChart points={REPLAY_POINTS} total={REPLAY_POINTS.length} label="Form drift per rep for a held-out UI-PRMD person: 7 correct reps, then 3 incorrect" />
+              </Panel>
+            ))}
+          {view.vitals && (
+          <Panel title="Vitals" note={camera.status === 'on' ? 'SIMULATED · follows your reps' : `SIMULATED · base: personal, ${s.baselineSessions} sessions`} delay={180}>
+            <VitalsGrid vitals={vitals} />
+          </Panel>
+          )}
           <ParameterSheet rows={live?.rows ?? PARAMETERS} />
           {view.model && (
           <Panel title="Rehab model check · deep squat" note="UI-PRMD · PDDL 1.0" delay={60}>
@@ -154,29 +178,13 @@ export default function SpacePage() {
             />
           </Panel>
           )}
-          {view.chart && (live
-            ? (
-              <Panel title="Worst deviation by rep · live" note={`after ${CALIBRATION} baseline reps`} delay={90} grow>
-                <RepChart values={live.scores} total={Math.max(10, live.scores.length)} limits={LIVE_LIMITS} unit=" sd" label="Worst deviation from your baseline per rep, in sd" />
-              </Panel>
-            )
-            : (
-              <Panel title={`R knee valgus by rep · set ${s.set}`} note="SIMULATED" delay={90} grow>
-                <RepChart values={VALGUS_BY_REP} total={s.reps} limits={VALGUS_LIMITS} label="Right knee valgus per rep" />
-              </Panel>
-            ))}
-          {view.vitals && (
-          <Panel title="Vitals" note={camera.status === 'on' ? 'SIMULATED · follows your reps' : `SIMULATED · base: personal, ${s.baselineSessions} sessions`} delay={180}>
-            <VitalsGrid vitals={vitals} />
-          </Panel>
-          )}
           <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD} />
         </>
       }
       status={
         <StatusBar
           items={live
-            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.scores.filter((x) => x > LIVE_LIMITS.rehab).length}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, 'VIDEO ON DEVICE']
+            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, 'VIDEO ON DEVICE']
             : [`REP ${s.rep}/${s.reps}`, `LOAD ${s.loadKg} KG`, `MD ${s.missionDay}`, 'FLAGS 2 · SIMULATED']}
           next={`Next: ${rec.tone === 'alert' ? `${rec.action.toLowerCase()} · repeat the rep` : rec.action.toLowerCase()}`}
         />

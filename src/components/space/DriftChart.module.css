@@ -1,0 +1,12 @@
+.chart { display: block; width: 100%; height: 100%; min-height: 0; font: 9px var(--font-mono); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.over { fill: var(--alert); opacity: .06; }
+.calib { fill: var(--mark-empty); opacity: .35; }
+.limit { stroke: var(--alert); stroke-dasharray: 4 3; }
+.alert { fill: var(--alert); }
+.axis { stroke: var(--mark-empty); }
+.line { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-linejoin: round; }
+.dot circle { fill: var(--ink); }
+.calibDot circle { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+.flagged circle { fill: var(--alert); }
+.flagged text { fill: var(--alert); }
+.todo { stroke: var(--mark-empty); }
