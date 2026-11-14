@@ -156,3 +156,15 @@ export function createRepDetector(up: Vec3, onRep: (f: RepFeatures, frames: Skel
   }
 }
 
+// Rep log as CSV: the first `calibration` reps are the baseline, later reps carry their z per feature.
+export function repsCsv(reps: RepFeatures[], calibration: number, model: SquatModel, threshold: number): string {
+  const baseline = reps.length >= calibration ? meanFeatures(reps.slice(0, calibration)) : null
+  const head = ['rep', 'phase', ...FEATURES, ...FEATURES.map((k) => `z_${k}`), 'worst_z', 'flagged']
+  const rows = reps.map((f, i) => {
+    const values = FEATURES.map((k) => f[k].toFixed(3))
+    if (i < calibration || !baseline) return [i + 1, 'baseline', ...values, ...FEATURES.map(() => ''), '', '']
+    const r = scoreRep(f, model, baseline)
+    return [i + 1, 'scored', ...values, ...FEATURES.map((k) => r.z[k].toFixed(2)), r.score.toFixed(2), r.score > threshold ? r.worst : '']
+  })
+  return [head, ...rows].map((r) => r.join(',')).join('\n') + '\n'
+}

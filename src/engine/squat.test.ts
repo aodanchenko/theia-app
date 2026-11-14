@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createRepDetector, MEDIAPIPE_NOISE, repFeatures, scoreRep, withNoise, type RepFeatures, type Skeleton, type Vec3 } from './squat.ts'
+import { createRepDetector, MEDIAPIPE_NOISE, repFeatures, repsCsv, scoreRep, withNoise, type RepFeatures, type Skeleton, type Vec3 } from './squat.ts'
 import { REHAB_MODEL } from './squatModel.ts'
 
 const UP: Vec3 = [0, 0, 1]
@@ -40,4 +40,15 @@ test('createRepDetector: counts two squats, ignores a shallow dip', () => {
   // 0.22 ≈ 23° of knee bend: starts a rep but is too shallow to count
   for (const depth of [1, 0.22, 1]) for (const s of [...ramp(depth), ...ramp(depth).reverse()]) push(s)
   assert.equal(reps.length, 2)
+})
+
+test('repsCsv: baseline reps have no z, a knees-in rep is flagged by knee width', () => {
+  const good = repFeatures([pose(0), pose(1), pose(0)], UP)
+  const bad = repFeatures([pose(0), pose(1, 8), pose(0)], UP)
+  const lines = repsCsv([good, good, good, bad], 3, REHAB_MODEL, 2).trim().split('\n')
+  assert.equal(lines.length, 5)
+  assert.equal(lines[0].split(',').length, lines[4].split(',').length)
+  assert.match(lines[1], /^1,baseline,/)
+  assert.match(lines[1], /,,$/)
+  assert.match(lines[4], /^4,scored,.*,kneeWidth$/)
 })
