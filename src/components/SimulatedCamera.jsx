@@ -18,9 +18,10 @@ const Bone = ({ from, to, ...props }) => (
 )
 
 // `figureHeight` sizes the person; a smaller value than `height` leaves floor below them.
-export default function SimulatedCamera({ theme, width = 360, height, figureHeight = height, arrow = false, tags = [], ruler = false }) {
+// `scene={false}` draws only the overlay (skeleton, cue, tags), for use on top of live video.
+export default function SimulatedCamera({ theme, width = 360, height, figureHeight = height, scene = true, arrow = false, tags = [], ruler = false }) {
   const id = useId()
-  const scene = SCENE[theme]
+  const palette = SCENE[theme]
   const scale = Math.min(1.08, (figureHeight - 94) / 390)
   const tx = width / 2 - 180 * scale
   const ty = 70 - 91 * scale
@@ -29,21 +30,23 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
   return (
     <svg className={styles.camera} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label="Simulated camera: person squatting, right knee moving inward">
       <defs>
-        <linearGradient id={`${id}wall`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={scene.wall[0]} /><stop offset="1" stopColor={scene.wall[1]} /></linearGradient>
+        <linearGradient id={`${id}wall`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={palette.wall[0]} /><stop offset="1" stopColor={palette.wall[1]} /></linearGradient>
         <radialGradient id={`${id}vignette`} cx=".5" cy=".42" r=".75"><stop offset=".55" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".45" /></radialGradient>
         <filter id={`${id}blur`}><feGaussianBlur stdDeviation="2.2" /></filter>
         <filter id={`${id}grain`}><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch" /><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .5 0" /></filter>
       </defs>
 
-      <rect width={width} height={height} fill={`url(#${id}wall)`} />
-      <rect y={ty + 470 * scale} width={width} height={height} fill={scene.ground} />
+      {scene && <rect width={width} height={height} fill={`url(#${id}wall)`} />}
+      {scene && <rect y={ty + 470 * scale} width={width} height={height} fill={palette.ground} />}
 
       <g transform={`translate(${tx},${ty}) scale(${scale})`}>
-        <g filter={`url(#${id}blur)`} opacity=".92" fill={scene.body}>
-          {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} stroke={scene.body} strokeWidth="30" />)}
-          <path d="M142 170L218 170L202 296L158 296Z" />
-          <circle cx="180" cy="118" r="27" />
-        </g>
+        {scene && (
+          <g filter={`url(#${id}blur)`} opacity=".92" fill={palette.body}>
+            {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} stroke={palette.body} strokeWidth="30" />)}
+            <path d="M142 170L218 170L202 296L158 296Z" />
+            <circle cx="180" cy="118" r="27" />
+          </g>
+        )}
 
         <g className={styles.skeleton}>
           {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} strokeWidth="1.4" />)}
@@ -73,8 +76,8 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
         })}
       </g>
 
-      <rect width={width} height={height} fill={`url(#${id}vignette)`} />
-      <rect width={width} height={height} filter={`url(#${id}grain)`} opacity=".22" />
+      {scene && <rect width={width} height={height} fill={`url(#${id}vignette)`} />}
+      {scene && <rect width={width} height={height} filter={`url(#${id}grain)`} opacity=".22" />}
 
       {ruler && (
         <g className={styles.ruler}>
