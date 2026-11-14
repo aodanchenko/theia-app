@@ -1,25 +1,29 @@
 import { useId, type SVGProps } from 'react'
-import type { Joint, OverlayTag, Theme } from '../types.ts'
 import { PoseLandmarker } from '@mediapipe/tasks-vision'
+import type { Joint, OverlayTag, Theme } from '../types.ts'
 import styles from './SimulatedCamera.module.css'
 
 // Stand-in for the live camera until it is enabled; the live view draws the real MediaPipe skeleton instead.
 // Space: NASA photo S133-E-008323 (public domain, squat on ARED aboard the ISS, three-quarter view) with all 33 landmarks
 // MediaPipe Pose (heavy) found on it, [x, y, visibility] in photo px; low-visibility ones are drawn faint.
 // Earth: a drawn person mid-squat, right knee drifting inward.
-type Pose = Partial<Record<Joint, [x: number, y: number]>>
+type Pose = Record<Joint, [x: number, y: number]>
 const PHOTO_LANDMARKS: [x: number, y: number, visibility: number][] = [[265,243,1],[287,199,1],[301,198,1],[317,198,1],[265,202,1],[261,201,1],[257,200,1],[381,209,1],[281,209,1],[297,276,1],[270,276,1],[551,359,1],[301,381,1],[749,557,1],[314,459,.75],[793,380,1],[244,343,.93],[809,313,1],[219,320,.9],[772,296,1],[231,318,.9],[751,325,1],[237,324,.89],[600,721,1],[451,717,1],[454,832,1],[159,715,.99],[522,1212,1],[212,1028,.99],[571,1276,1],[259,1083,.99],[429,1379,1],[67,1141,.99]]
 // Face points (0–10) are left out: in a three-quarter view MediaPipe guesses them. MediaPipe has no neck, so (as in
 // OpenPose) neck = mid-shoulders and head = mid-ears, joined by one bone.
 const SHOWN = PHOTO_LANDMARKS.map((_, i) => i > 10)
-const mid = (a: number, b: number): [number, number] => [(PHOTO_LANDMARKS[a][0] + PHOTO_LANDMARKS[b][0]) / 2, (PHOTO_LANDMARKS[a][1] + PHOTO_LANDMARKS[b][1]) / 2]
+const at = (i: number): [number, number] => [PHOTO_LANDMARKS[i][0], PHOTO_LANDMARKS[i][1]]
+const mid = (a: number, b: number): [number, number] => [(at(a)[0] + at(b)[0]) / 2, (at(a)[1] + at(b)[1]) / 2]
 const HEAD = mid(7, 8), NECK = mid(11, 12)
 const PHOTO = {
   href: '/ared-squat.jpg', w: 1103, h: 1440, credit: 'NASA · S133-E-008323',
   // for tags and the ruler
-  joints: { head: HEAD, neck: NECK, ...Object.fromEntries(Object.entries({ ls: 11, rs: 12, lh: 23, rh: 24, lk: 25, rk: 26, la: 27, ra: 28 }).map(([j, i]) => [j, PHOTO_LANDMARKS[i].slice(0, 2)])) } as Pose,
+  joints: {
+    head: HEAD, neck: NECK, ls: at(11), rs: at(12), le: at(13), re: at(14), lw: at(15), rw: at(16),
+    lh: at(23), rh: at(24), lk: at(25), rk: at(26), la: at(27), ra: at(28),
+  } satisfies Pose,
 }
-const JOINTS: Record<Joint, [x: number, y: number]> = {
+const JOINTS: Pose = {
   head: [180, 118], neck: [180, 150], ls: [142, 170], rs: [218, 170], le: [124, 226], re: [236, 226],
   lw: [156, 250], rw: [204, 250], lh: [158, 296], rh: [202, 296], lk: [126, 372], rk: [192, 378], la: [138, 462], ra: [222, 462],
 }
@@ -29,10 +33,9 @@ const SCENE: Record<Theme, { wall: [string, string]; ground: string; body: strin
   earth: { wall: ['#b9ab95', '#8f8270'], ground: '#7d715f', body: '#4b4236' },
 }
 
-const Bone = ({ pose, from, to, ...props }: { pose: Pose; from: Joint; to: Joint } & SVGProps<SVGLineElement>) => {
-  const [a, b] = [pose[from], pose[to]]
-  return a && b ? <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeLinecap="round" {...props} /> : null
-}
+const Bone = ({ pose, from, to, ...props }: { pose: Pose; from: Joint; to: Joint } & SVGProps<SVGLineElement>) => (
+  <line x1={pose[from][0]} y1={pose[from][1]} x2={pose[to][0]} y2={pose[to][1]} strokeLinecap="round" {...props} />
+)
 
 // `figureHeight` sizes the person; a smaller value than `height` leaves floor below them.
 // `scene={false}` draws only the overlay (skeleton, cue, tags), for use on top of live video.
@@ -57,7 +60,7 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
   const tx = photo ? (width - PHOTO.w * scale) / 2 : width / 2 - 180 * scale
   const ty = photo ? (height - PHOTO.h * scale) / 2 : 70 - 91 * scale
   const k = 1 / scale // stroke widths below are in screen px
-  const screen = (j: Joint) => { const [x, y] = pose[j] ?? [0, 0]; return [tx + x * scale, ty + y * scale] }
+  const screen = (j: Joint) => [tx + pose[j][0] * scale, ty + pose[j][1] * scale]
   const [kx, ky] = JOINTS.rk
   const rulerTop = screen(photo ? 'ls' : 'neck')[1], rulerStep = (screen(photo ? 'la' : 'ra')[1] - rulerTop) / 16
 
