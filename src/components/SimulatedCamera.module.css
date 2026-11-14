@@ -2,8 +2,11 @@
 .skeleton { stroke: rgba(255, 255, 255, .8); fill: rgba(255, 255, 255, .8); }
 .cue { stroke: var(--cue); }
 .cue path { stroke: var(--cue); }
-.tag rect { fill: rgba(14, 19, 26, .78); }
-.tag text { font: 12px var(--font-mono); fill: #fff; }
+.tag line { stroke: rgba(255, 255, 255, .7); stroke-width: 1; }
+/* dark halo instead of a box: readable on any part of the photo */
+.tag text { font: 600 12px var(--font-mono); fill: #fff; paint-order: stroke; stroke: rgba(0, 0, 0, .7); stroke-width: 3px; stroke-linejoin: round; }
 .tag[data-alert] text { fill: var(--cue); }
+.tag[data-alert] line { stroke: var(--cue); }
+.credit { font: 10px var(--font-mono); fill: rgba(255, 255, 255, .75); paint-order: stroke; stroke: rgba(0, 0, 0, .6); stroke-width: 2px; }
 .ruler line { stroke: #fff; opacity: .7; }
 .rulerMark { fill: var(--cue); }

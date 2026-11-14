@@ -31,9 +31,10 @@ export const VALGUS_BY_REP: number[] = [2, 3, 3, 4, 5, 7, 9]
 export const VALGUS_LIMITS: Limits = { baseline: [2, 4], rehab: 6, base: 10 }
 
 export const OVERLAY_TAGS: OverlayTag[] = [
-  { joint: 'rk', dx: 20, dy: 4, label: 'KNEE 9°', alert: true },
-  { joint: 'rh', dx: 16, dy: -6, label: 'HIP 94°' },
-  { joint: 'rs', dx: 16, dy: 30, label: 'TRUNK 4°' },
+  // measured by MediaPipe on the photo in SimulatedCamera (2D angles; knee width = knee distance / ankle distance)
+  { joint: 'rk', dx: 22, dy: 34, label: 'KNEE 100°' },
+  { joint: 'lk', dx: 22, dy: 24, label: 'KNEES/ANKLES 0.95' },
+  { joint: 'ls', dx: 22, dy: -14, label: 'TRUNK 16°' },
 ]
 
 // Vitals mid-set (7 reps), from the simulator so the demo matches what the live view produces.

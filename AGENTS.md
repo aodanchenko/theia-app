@@ -32,7 +32,7 @@ src/
   main.tsx              entry + routes: / (home), /space, /earth. Sets the theme per route.
   design/tokens.css     design system: tokens, reset, motion. The only global CSS.
   components/
-    SimulatedCamera.tsx  drawn stand-in for the camera (both modes)
+    SimulatedCamera.tsx  stand-in for the camera: Space = NASA photo S133-E-008323 (public/ared-squat.jpg) + its MediaPipe skeleton; Earth = drawn person
     space/               workbench components
     earth/               coach screen components
   pages/                 HomePage, SpacePage, EarthPage
@@ -106,7 +106,7 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 
 | Component | Props | Notes |
 |---|---|---|
-| `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `scene`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`; joints: `rk`, `rh`, `rs` …; `scene={false}` draws only the overlay |
+| `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `scene`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`, drawn as haloed text with a leader line; joints: `rk`, `rh`, `rs` …; `scene={false}` draws only the overlay. Space photo landmarks come from MediaPipe Pose *heavy* on that photo; to swap the photo, rerun it and paste the 33 `[x, y, visibility]` |
 | **space/** | | |
 | `RotateGate` | – | Full-screen "Turn your phone sideways" over `/space` on a phone held upright (CSS media query, no JS). Links to Earth and home |
 | `Workbench` | `header`, `toolbar`, `camera`, `side`, `status` (nodes) | Grid shell of the tablet screen; the side column scrolls |

@@ -64,7 +64,7 @@ export type Demo = ReturnType<typeof useDemo>
 
 // Camera stand-in with the knee tag following the current rep.
 export function Cam({ d, width = 520, height = 548, showTags = true }: { d: Demo; width?: number; height?: number; showTags?: boolean }) {
-  const tags = OVERLAY_TAGS.map((t) => (t.joint === 'rk' ? { ...t, label: `KNEE ${d.last}°`, alert: d.state === 'flagged' } : t))
+  const tags = OVERLAY_TAGS.map((t) => (t.joint === 'rk' ? { ...t, label: `VALGUS ${d.last}°`, alert: d.state === 'flagged' } : t))
   return <SimulatedCamera theme="space" width={width} height={height} scene tags={showTags ? tags : []} ruler={showTags} />
 }
 

@@ -134,7 +134,7 @@ export default function SpacePage() {
           caption={live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`SET ${s.set} · REP ${s.rep}/${s.reps} · ${s.loadKg} KG`]}
           onPose={onPose}
         >
-          {(cam) => (cam ? null : <SimulatedCamera theme="space" width={520} height={548} scene tags={view.tags ? OVERLAY_TAGS : []} ruler={view.tags} />)}
+          {(cam) => (cam ? null : <SimulatedCamera theme="space" width={420} height={548} scene tags={view.tags ? OVERLAY_TAGS : []} ruler={view.tags} />)}
         </CameraPanel>
       }
       side={

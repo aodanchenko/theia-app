@@ -1,9 +1,19 @@
 import { useId, type SVGProps } from 'react'
 import type { Joint, OverlayTag, Theme } from '../types.ts'
+import { PoseLandmarker } from '@mediapipe/tasks-vision'
 import styles from './SimulatedCamera.module.css'
 
-// Drawn stand-in for the live camera: a person mid-squat, front view, right knee drifting inward.
-// Shown until the camera is enabled; the live view draws the real MediaPipe skeleton instead.
+// Stand-in for the live camera until it is enabled; the live view draws the real MediaPipe skeleton instead.
+// Space: NASA photo S133-E-008323 (public domain, squat on ARED aboard the ISS, three-quarter view) with all 33 landmarks
+// MediaPipe Pose (heavy) found on it, [x, y, visibility] in photo px; low-visibility ones are drawn faint.
+// Earth: a drawn person mid-squat, right knee drifting inward.
+type Pose = Partial<Record<Joint, [x: number, y: number]>>
+const PHOTO_LANDMARKS: [x: number, y: number, visibility: number][] = [[265,243,1],[287,199,1],[301,198,1],[317,198,1],[265,202,1],[261,201,1],[257,200,1],[381,209,1],[281,209,1],[297,276,1],[270,276,1],[551,359,1],[301,381,1],[749,557,1],[314,459,.75],[793,380,1],[244,343,.93],[809,313,1],[219,320,.9],[772,296,1],[231,318,.9],[751,325,1],[237,324,.89],[600,721,1],[451,717,1],[454,832,1],[159,715,.99],[522,1212,1],[212,1028,.99],[571,1276,1],[259,1083,.99],[429,1379,1],[67,1141,.99]]
+const PHOTO = {
+  href: '/ared-squat.jpg', w: 1103, h: 1440, credit: 'NASA · S133-E-008323',
+  // for tags and the ruler
+  joints: Object.fromEntries(Object.entries({ head: 0, ls: 11, rs: 12, lh: 23, rh: 24, lk: 25, rk: 26, la: 27, ra: 28 }).map(([j, i]) => [j, PHOTO_LANDMARKS[i].slice(0, 2)])) as Pose,
+}
 const JOINTS: Record<Joint, [x: number, y: number]> = {
   head: [180, 118], neck: [180, 150], ls: [142, 170], rs: [218, 170], le: [124, 226], re: [236, 226],
   lw: [156, 250], rw: [204, 250], lh: [158, 296], rh: [202, 296], lk: [126, 372], rk: [192, 378], la: [138, 462], ra: [222, 462],
@@ -14,9 +24,10 @@ const SCENE: Record<Theme, { wall: [string, string]; ground: string; body: strin
   earth: { wall: ['#b9ab95', '#8f8270'], ground: '#7d715f', body: '#4b4236' },
 }
 
-const Bone = ({ from, to, ...props }: { from: Joint; to: Joint } & SVGProps<SVGLineElement>) => (
-  <line x1={JOINTS[from][0]} y1={JOINTS[from][1]} x2={JOINTS[to][0]} y2={JOINTS[to][1]} strokeLinecap="round" {...props} />
-)
+const Bone = ({ pose, from, to, ...props }: { pose: Pose; from: Joint; to: Joint } & SVGProps<SVGLineElement>) => {
+  const [a, b] = [pose[from], pose[to]]
+  return a && b ? <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeLinecap="round" {...props} /> : null
+}
 
 // `figureHeight` sizes the person; a smaller value than `height` leaves floor below them.
 // `scene={false}` draws only the overlay (skeleton, cue, tags), for use on top of live video.
@@ -34,13 +45,19 @@ interface Props {
 export default function SimulatedCamera({ theme, width = 360, height, figureHeight = height, scene = true, arrow = false, tags = [], ruler = false }: Props) {
   const id = useId()
   const palette = SCENE[theme]
-  const scale = Math.min(1.08, (figureHeight - 94) / 390)
-  const tx = width / 2 - 180 * scale
-  const ty = 70 - 91 * scale
+  const photo = theme === 'space'
+  const pose = photo ? PHOTO.joints : JOINTS
+  // fit: the photo covers the frame; the drawn figure scales to figureHeight
+  const scale = photo ? Math.max(width / PHOTO.w, height / PHOTO.h) : Math.min(1.08, (figureHeight - 94) / 390)
+  const tx = photo ? (width - PHOTO.w * scale) / 2 : width / 2 - 180 * scale
+  const ty = photo ? (height - PHOTO.h * scale) / 2 : 70 - 91 * scale
+  const k = 1 / scale // stroke widths below are in screen px
+  const screen = (j: Joint) => { const [x, y] = pose[j] ?? [0, 0]; return [tx + x * scale, ty + y * scale] }
   const [kx, ky] = JOINTS.rk
+  const rulerTop = screen(photo ? 'ls' : 'neck')[1], rulerStep = (screen(photo ? 'la' : 'ra')[1] - rulerTop) / 16
 
   return (
-    <svg className={styles.camera} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label="Simulated camera: person squatting, right knee moving inward">
+    <svg className={styles.camera} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label={`Simulated camera${photo ? ` (photo ${PHOTO.credit})` : ''}: ${photo ? 'astronaut squatting on ARED' : 'person squatting, right knee moving inward'}`}>
       <defs>
         <linearGradient id={`${id}wall`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={palette.wall[0]} /><stop offset="1" stopColor={palette.wall[1]} /></linearGradient>
         <radialGradient id={`${id}vignette`} cx=".5" cy=".42" r=".75"><stop offset=".55" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".45" /></radialGradient>
@@ -48,56 +65,69 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
         <filter id={`${id}grain`}><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch" /><feColorMatrix values="0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .5 0" /></filter>
       </defs>
 
-      {scene && <rect width={width} height={height} fill={`url(#${id}wall)`} />}
-      {scene && <rect y={ty + 470 * scale} width={width} height={height} fill={palette.ground} />}
+      {scene && !photo && <rect width={width} height={height} fill={`url(#${id}wall)`} />}
+      {scene && !photo && <rect y={ty + 470 * scale} width={width} height={height} fill={palette.ground} />}
 
       <g transform={`translate(${tx},${ty}) scale(${scale})`}>
-        {scene && (
+        {scene && photo && <image href={PHOTO.href} width={PHOTO.w} height={PHOTO.h} />}
+        {scene && !photo && (
           <g filter={`url(#${id}blur)`} opacity=".92" fill={palette.body}>
-            {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} stroke={palette.body} strokeWidth="30" />)}
+            {BONES.map(([a, b]) => <Bone key={a + b} pose={pose} from={a} to={b} stroke={palette.body} strokeWidth="30" />)}
             <path d="M142 170L218 170L202 296L158 296Z" />
             <circle cx="180" cy="118" r="27" />
           </g>
         )}
 
-        <g className={styles.skeleton}>
-          {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} strokeWidth="1.4" />)}
-          {Object.entries(JOINTS).filter(([joint]) => joint !== 'head').map(([joint, [x, y]]) => <circle key={joint} cx={x} cy={y} r="2.6" />)}
-        </g>
+        {photo ? (
+          <g className={styles.skeleton}>
+            {PoseLandmarker.POSE_CONNECTIONS.map(({ start, end }) => {
+              const [a, b] = [PHOTO_LANDMARKS[start], PHOTO_LANDMARKS[end]]
+              return <line key={`${start}-${end}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeWidth={1.5 * k} strokeLinecap="round" opacity={Math.min(a[2], b[2]) < .5 ? .3 : 1} />
+            })}
+            {PHOTO_LANDMARKS.map(([x, y, v], i) => <circle key={i} cx={x} cy={y} r={2.4 * k} opacity={v < .5 ? .3 : 1} />)}
+          </g>
+        ) : (
+          <g className={styles.skeleton}>
+            {BONES.map(([a, b]) => <Bone key={a + b} pose={pose} from={a} to={b} strokeWidth={1.5 * k} />)}
+            {Object.entries(pose).filter(([joint]) => joint !== 'head').map(([joint, [x, y]]) => <circle key={joint} cx={x} cy={y} r={2.8 * k} />)}
+          </g>
+        )}
 
-        <g className={styles.cue}>
-          <Bone from="rh" to="rk" strokeWidth="2.4" />
-          <Bone from="rk" to="ra" strokeWidth="2.4" />
-          <circle className="pop" cx={kx} cy={ky} r="14" fill="none" strokeWidth="2" />
+        {!photo && <g className={styles.cue}>
+          <Bone pose={pose} from="rh" to="rk" strokeWidth={2.5 * k} />
+          <Bone pose={pose} from="rk" to="ra" strokeWidth={2.5 * k} />
+          <circle className="pop" cx={kx} cy={ky} r={14 * k} fill="none" strokeWidth={2 * k} />
           {arrow && (
             <g className="pop" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none">
               <path d={`M${kx + 20} ${ky}h44`} />
               <path d={`M${kx + 56} ${ky - 12}l14 12-14 12`} />
             </g>
           )}
-        </g>
-
-        {tags.map(({ joint, dx, dy, label, alert }) => {
-          const [x, y] = [JOINTS[joint][0] + dx, JOINTS[joint][1] + dy]
-          return (
-            <g key={label} className={`pop ${styles.tag}`} data-alert={alert || undefined}>
-              <rect x={x} y={y - 13} width={label.length * 7.4 + 12} height="20" rx="3" />
-              <text x={x + 6} y={y + 1}>{label}</text>
-            </g>
-          )
-        })}
+        </g>}
       </g>
 
-      {scene && <rect width={width} height={height} fill={`url(#${id}vignette)`} />}
-      {scene && <rect width={width} height={height} filter={`url(#${id}grain)`} opacity=".22" />}
+      {tags.map(({ joint, dx, dy, label, alert }) => {
+        const [jx, jy] = screen(joint)
+        const [x, y] = [jx + dx, jy + dy]
+        return (
+          <g key={label} className={`pop ${styles.tag}`} data-alert={alert || undefined}>
+            <line x1={jx} y1={jy} x2={x - Math.sign(dx) * 2} y2={y - 4} />
+            <text x={x + Math.sign(dx) * 4} y={y} textAnchor={dx < 0 ? 'end' : 'start'}>{label}</text>
+          </g>
+        )
+      })}
+
+      {scene && !photo && <rect width={width} height={height} fill={`url(#${id}vignette)`} />}
+      {scene && !photo && <rect width={width} height={height} filter={`url(#${id}grain)`} opacity=".22" />}
+      {scene && photo && <text className={styles.credit} x={width / 2} y={height - 10} textAnchor="middle">{PHOTO.credit}</text>}
 
       {ruler && (
         <g className={styles.ruler}>
           {Array.from({ length: 17 }, (_, i) => {
-            const y = ty + JOINTS.head[1] * scale + i * 22
+            const y = rulerTop + i * rulerStep
             return <line key={i} x1={i % 4 ? 8 : 0} x2="16" y1={y} y2={y} />
           })}
-          <path className={styles.rulerMark} d={`M18 ${ty + JOINTS.rh[1] * scale}l10-6v12z`} />
+          <path className={styles.rulerMark} d={`M18 ${screen(photo ? 'lh' : 'rh')[1]}l10-6v12z`} />
         </g>
       )}
     </svg>
