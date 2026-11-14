@@ -1,7 +1,18 @@
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
-.tile { display: grid; grid-template-columns: 1fr auto; align-items: end; row-gap: 1px; padding: 4px 6px; background: var(--bg); box-shadow: var(--sunken); }
-.tile small { grid-column: 1 / 3; font: 600 var(--text-xs) var(--font-sans); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; text-shadow: var(--engraved); }
-.tile b { font: 500 15px/1 var(--font-mono); }
-.tile[data-alert] b { color: var(--alert); }
-.unit { margin-left: 2px; font-size: var(--text-xs); color: var(--muted); }
-.expected { text-transform: none; letter-spacing: 0; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tile { display: grid; gap: 4px; padding: 6px 8px 5px; border-radius: 2px; background: var(--surface-head); box-shadow: var(--raised); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.name { overflow: hidden; font: 600 var(--text-xs) var(--font-sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; text-overflow: ellipsis; color: var(--ink-2); text-shadow: var(--engraved); }
+
+/* Status lamp: a small lit legend. Unlit grey for "expected"; lit for normal / watch / flag. */
+.lamp { flex: none; padding: 1px 5px; border-radius: 2px; background: var(--bg); box-shadow: var(--sunken); font: 700 9px/1.4 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile[data-status="normal"] .lamp { color: var(--good); }
+.tile[data-status="watch"] .lamp { color: var(--caution); }
+.tile[data-status="flag"] .lamp { background: var(--alert); color: #fff; box-shadow: none; }
+
+.body { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* Recessed readout window. Fixed min width so changing digits never shift the sparkline. */
+.window { display: inline-flex; align-items: baseline; gap: 3px; min-width: 7ch; padding: 2px 6px; border-radius: 2px; background: var(--surface); box-shadow: var(--sunken), 0 0 0 1px rgba(0, 0, 0, .06); }
+.window b { font: 500 18px/1.15 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.tile[data-status="flag"] .window b { color: var(--alert); }
+.unit { font: var(--text-xs) var(--font-mono); color: var(--muted); }
+.foot { font: var(--text-xs) var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

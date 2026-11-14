@@ -1,3 +1,7 @@
-.spark { width: 58px; height: 16px; }
-.spark polyline { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
-.spark polyline[data-alert] { stroke: var(--alert); }
+.spark { display: block; width: 72px; height: 24px; overflow: visible; }
+.band { fill: var(--good-band); }
+.spark polyline { fill: none; stroke: var(--ink-2); stroke-width: 1.2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.now { fill: var(--ink-2); }
+.now[data-status="normal"] { fill: var(--good); }
+.now[data-status="watch"] { fill: var(--caution); }
+.now[data-status="flag"] { fill: var(--alert); }

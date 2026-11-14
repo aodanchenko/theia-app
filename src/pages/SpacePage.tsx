@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type { Landmark } from '@mediapipe/tasks-vision'
 import useCameraStream from '../capture/useCameraStream.ts'
+import useSimVitals from '../data/useSimVitals.ts'
 import SimulatedCamera from '../components/SimulatedCamera.tsx'
 import CameraPanel from '../components/space/CameraPanel.tsx'
 import Header from '../components/space/Header.tsx'
@@ -15,7 +16,7 @@ import Recommendation, { type Tone } from '../components/space/Recommendation.ts
 import RepChart from '../components/space/RepChart.tsx'
 import VitalsGrid from '../components/space/VitalsGrid.tsx'
 import Workbench from '../components/space/Workbench.tsx'
-import { OVERLAY_TAGS, PARAMETERS, SESSION, VALGUS_BY_REP, VALGUS_LIMITS, VITALS } from '../data/demo.ts'
+import { OVERLAY_TAGS, PARAMETERS, SESSION, VALGUS_BY_REP, VALGUS_LIMITS } from '../data/demo.ts'
 import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, withNoise, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
 import type { Limits, Parameter } from '../types.ts'
@@ -89,6 +90,7 @@ export default function SpacePage() {
     setTracking(`KNEE ${Math.round((f.left + f.right) / 10) * 5}°`) // 5° steps, so the page re-renders only on change
   }, [detect])
   const live = reps.length > 0 ? liveView(reps) : null
+  const vitals = useSimVitals(camera.status === 'on', reps.length)
   const rec = recommend(live, reps.length, tracking)
   const basis = live
     ? `vs your baseline (first ${CALIBRATION} reps) · UI-PRMD rehab scale · known cause: ${s.knownCause}`
@@ -161,8 +163,8 @@ export default function SpacePage() {
               </Panel>
             ))}
           {view.vitals && (
-          <Panel title="Vitals" note={`SIMULATED · base: personal, ${s.baselineSessions} sessions`} delay={180}>
-            <VitalsGrid vitals={VITALS} />
+          <Panel title="Vitals" note={camera.status === 'on' ? 'SIMULATED · follows your reps' : `SIMULATED · base: personal, ${s.baselineSessions} sessions`} delay={180}>
+            <VitalsGrid vitals={vitals} />
           </Panel>
           )}
           <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD} />
