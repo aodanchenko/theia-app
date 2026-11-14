@@ -13,7 +13,7 @@ interface Props {
 }
 
 const MODEL = 'heavy' // the ISS tablet can take the 30 MB model; it holds limbs better behind the ARED frame
-const POSE_NOTE = { off: 'Live video', loading: 'Loading pose model…', running: `Live · MediaPipe Pose ${MODEL}`, error: 'Pose model failed to load' }
+const POSE_NOTE = { off: 'Live video', loading: 'Loading pose model…', running: `Live · MediaPipe Pose ${MODEL} · video stays on device`, error: 'Pose model failed to load' }
 
 export default function CameraPanel({ stream, caption, onPose, children }: Props) {
   const video = useRef<HTMLVideoElement>(null)
@@ -29,7 +29,7 @@ export default function CameraPanel({ stream, caption, onPose, children }: Props
       {live && <canvas ref={canvas} className={styles.video} aria-hidden="true" />}
       {children(live)}
       <span className={styles.caption}>{caption.filter(Boolean).map((line) => <span key={line}>{line}</span>)}</span>
-      <span className={styles.note} role="status">{live ? POSE_NOTE[pose] : 'Simulated view'}</span>
+      <span className={styles.note} role="status">{live ? POSE_NOTE[pose] : 'Simulated view · camera video stays on device'}</span>
     </div>
   )
 }

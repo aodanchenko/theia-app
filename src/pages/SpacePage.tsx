@@ -164,13 +164,12 @@ export default function SpacePage() {
             <ToolButton onClick={() => download(`theia-reps-${new Date().toISOString().slice(0, 16).replace(':', '-')}.csv`, repsCsv(reps, CALIBRATION, LIVE_MODEL, THRESHOLD))} disabled={reps.length === 0}>⤓ Export CSV</ToolButton>
           </ToolGroup>
           {camera.error && <ToolNote caution>{camera.error}</ToolNote>}
-          {!camera.error && <ToolNote>{reps.length ? `${reps.length} reps · video stays on device` : 'Video stays on device'}</ToolNote>}
         </Toolbar>
       }
       camera={
         <CameraPanel
           stream={camera.stream}
-          caption={live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`DEMO · REP ${DEMO_REPS.length} · ${DEMO_VIEW.state}`]}
+          caption={live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`DEMO · REP ${DEMO_REPS.length} · ${DEMO_VIEW.state}`, 'PHOTO · NASA S133-E-008323']}
           onPose={onPose}
         >
           {(cam) => (cam ? null : <SimulatedCamera theme="space" width={420} height={548} scene tags={view.tags ? OVERLAY_TAGS : []} ruler={view.tags} />)}
@@ -209,7 +208,7 @@ export default function SpacePage() {
       status={
         <StatusBar
           items={live
-            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, 'VIDEO ON DEVICE']
+            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`]
             : [`REP ${DEMO_REPS.length}`, `FLAGS ${DEMO_VIEW.flags}`, 'DEMO · SIMULATED', `MD ${s.missionDay}`]}
           next={`Next: ${rec.action.toLowerCase()}${rec.next ? ` · ${rec.next.toLowerCase()}` : ''}`}
         />

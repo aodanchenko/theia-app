@@ -129,7 +129,6 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
 
       {scene && !photo && <rect width={width} height={height} fill={`url(#${id}vignette)`} />}
       {scene && !photo && <rect width={width} height={height} filter={`url(#${id}grain)`} opacity=".22" />}
-      {scene && photo && <text className={styles.credit} x={width / 2} y={height - 10} textAnchor="middle">{PHOTO.credit}</text>}
 
       {ruler && (
         <g className={styles.ruler}>
