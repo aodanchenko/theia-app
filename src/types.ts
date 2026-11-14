@@ -57,5 +57,6 @@ export interface EarthProfile {
   aid: boolean // cane, crutch or walker
   position: 'standing' | 'seated' // how they exercise
   voice: boolean // speak the cues
+  sounds?: boolean // feedback sounds; missing (older saved answers) means on
   bigText: boolean
 }
