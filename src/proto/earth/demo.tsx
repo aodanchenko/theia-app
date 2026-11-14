@@ -1,5 +1,5 @@
 // Throwaway: a scripted 10-rep session shared by the /proto/earth variants. Nothing in production imports this.
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { speak, stopSpeaking } from '../../capture/speak.ts'
 import SimulatedCamera from '../../components/SimulatedCamera.tsx'
 import { activityLabel, type Activity } from '../../engine/activity.ts'
@@ -64,7 +64,7 @@ export function useEarthDemo() {
   for (let k = history.length - 1; k >= 0 && history[k] === 'good'; k--) streak++
 
   const cue = step.phase === 'away' ? { title: 'Step into view', hint: 'Your whole body should fit on the screen.' }
-    : step.phase === 'done' ? { title: 'Set done!', hint: `${history.filter((h) => h === 'good').length} reps just like your normal.` }
+    : step.phase === 'done' ? { title: 'Set complete', hint: `${history.filter((h) => h === 'good').length} reps just like your normal.` }
     : step.phase === 'ready' || !verdict ? { title: 'Start moving', hint: startHint(PROFILE) }
     : cueFor(verdict, PROFILE)
 
@@ -90,10 +90,68 @@ export type Demo = ReturnType<typeof useEarthDemo>
 
 // Camera stand-in: the drawn person; `arrow` shows the knee-out arrow on the body.
 export function Backdrop({ arrow = false }: { arrow?: boolean }) {
-  return <SimulatedCamera theme="earth" height={844} figureHeight={640} arrow={arrow} />
+  return <SimulatedCamera theme="earth" height={470} figureHeight={430} arrow={arrow} /> // sized for the framed camera, so the whole body fits
 }
 
-// Shared settings sheet: voice and bigger text really work; restart replays the set.
+// One icon set, one stroke. No emoji.
+const PATHS = {
+  check: 'M5 12.5 10 17.5 19 7.5',
+  alert: 'M12 6.5v7M12 17.5v.5',
+  pause: 'M9 6v12M15 6v12',
+  play: 'M8 5.5v13l11-6.5Z',
+  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z',
+  speaker: 'M4 9.5h3.5L12 6v12l-4.5-3.5H4ZM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11',
+  replay: 'M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.7h3.7',
+  up: 'M12 19V5M6 11l6-6 6 6',
+  right: 'M5 12h14M13 6l6 6-6 6',
+  person: 'M12 7.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM12 7.5v7M8 10.5h8M12 14.5l-3 6M12 14.5l3 6',
+} as const
+export function Icon({ name, size = 24 }: { name: keyof typeof PATHS; size?: number }) {
+  return (
+    <svg className="pe-icon" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path d={PATHS[name]} fill={name === 'play' ? 'currentColor' : 'none'} />
+    </svg>
+  )
+}
+
+// What the screen says, in an instructor's plain words. kind drives the colour of the result band.
+export type Kind = 'idle' | 'learn' | 'good' | 'fix' | 'done'
+export function say(s: DemoState): { kind: Kind; title: string; line: string } {
+  if (s.phase === 'away') return { kind: 'idle', title: 'Step into the frame', line: 'Whole body visible, 2–3 steps back.' }
+  if (s.phase === 'done') return { kind: 'done', title: 'Set complete', line: `${s.good} of ${TOTAL} reps on target.` }
+  if (s.phase !== 'result' || !s.verdict) return { kind: 'idle', title: s.rep ? 'Next rep' : 'Start when ready', line: s.rep ? 'Same as before, nice and slow.' : 'Stand tall, bend your knees, come up slowly.' }
+  if (s.verdict.kind === 'learning') return { kind: 'learn', title: `Rep ${s.rep} · Learning your normal`, line: `${s.rep} of 3. Move the way you usually do.` }
+  if (s.verdict.kind === 'good') return { kind: 'good', title: `Rep ${s.rep} · On target`, line: 'Same as your normal.' }
+  return { kind: 'fix', title: s.cue.title, line: `Rep ${s.rep} · ${s.cue.hint}.` }
+}
+
+// Top bar: pause/resume, one segment per rep (coloured by result), rep count, settings.
+export function TopBar({ d, onSettings }: { d: Demo; onSettings: () => void }) {
+  const { s } = d
+  return (
+    <header className="pe-top">
+      <button type="button" className="pe-icon-btn" aria-label={s.paused ? 'Resume' : 'Pause'} onClick={d.toggle}><Icon name={s.paused ? 'play' : 'pause'} /></button>
+      <div className="pe-segs" role="progressbar" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={s.rep} aria-label="Reps">
+        {Array.from({ length: TOTAL }, (_, k) => <i key={k} data-r={s.history[k]} />)}
+      </div>
+      <span className="pe-count"><b className="tabular">{s.rep}</b>/{TOTAL}</span>
+      <button type="button" className="pe-icon-btn" aria-label="Settings" onClick={onSettings}><Icon name="gear" /></button>
+    </header>
+  )
+}
+
+// The camera, framed inside the page. Children are drawn on top of it (marks, labels).
+export function Frame({ arrow, children, label }: { arrow?: boolean; children?: ReactNode; label?: string }) {
+  return (
+    <div className="pe-frame">
+      <Backdrop arrow={arrow} />
+      {label && <span className="pe-frame-label">{label}</span>}
+      {children}
+    </div>
+  )
+}
+
+// Shared settings sheet: voice and bigger text really work; replay restarts the set.
 export function SettingsSheet({ d, open, onClose }: { d: Demo; open: boolean; onClose: () => void }) {
   return (
     <div className="pe-sheet" data-open={open || undefined} inert={!open} role="dialog" aria-modal="true" aria-label="Settings">
@@ -102,17 +160,19 @@ export function SettingsSheet({ d, open, onClose }: { d: Demo; open: boolean; on
         <h2>Settings</h2>
         <button type="button" role="switch" aria-checked={d.voice} className="pe-row" onClick={() => d.setVoice(!d.voice)}>Speak the tips<span className="pe-switch" data-on={d.voice || undefined} /></button>
         <button type="button" role="switch" aria-checked={d.big} className="pe-row" onClick={() => d.setBig(!d.big)}>Bigger text<span className="pe-switch" data-on={d.big || undefined} /></button>
-        <button type="button" className="pe-row" onClick={() => { d.restart(); onClose() }}>Replay the demo set<span aria-hidden="true">↺</span></button>
-        <button type="button" className="pe-chunky" onClick={onClose}>Done</button>
+        <button type="button" className="pe-row" onClick={() => { d.restart(); onClose() }}>Start the set again<Icon name="replay" /></button>
+        <button type="button" className="pe-btn" onClick={onClose}>Done</button>
       </div>
     </div>
   )
 }
 
-export function Gear({ onClick, className = '' }: { onClick: () => void; className?: string }) {
+// The one full-width action at the bottom.
+export function MainButton({ d, tone }: { d: Demo; tone?: Kind }) {
+  const { s } = d
   return (
-    <button type="button" className={`pe-gear ${className}`} aria-label="Settings" onClick={onClick}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+    <button type="button" className="pe-btn" data-tone={tone} onClick={d.toggle}>
+      {s.phase === 'done' ? 'Start another set' : s.paused ? 'Resume' : 'Pause'}
     </button>
   )
 }

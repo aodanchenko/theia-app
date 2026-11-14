@@ -14,7 +14,7 @@ const ROUTES: Record<string, { title: string; theme: Theme | 'home'; Page: Compo
   // Throwaway design prototypes, dev server only (never in the production bundle).
   ...(import.meta.env.DEV ? {
     '/proto/sounds': { title: 'Theia · Rep sounds', theme: 'space' as Theme, Page: lazy(() => import('./proto/sounds/SoundsLab.tsx')) },
-    '/proto/earth': { title: 'Theia · Earth prototypes', theme: 'earth' as Theme, Page: lazy(() => import('./proto/earth/Harness.tsx')) },
+    '/lab/earth-style': { title: 'Theia · Earth style lab', theme: 'earth' as Theme, Page: lazy(() => import('./proto/earth/StyleLab.tsx')) },
   } : {}),
 }
 
