@@ -5,5 +5,5 @@
 .track { padding: 2px; background: var(--bg); box-shadow: var(--sunken); }
 .bar { display: block; height: 8px; background: var(--mark); }
 .check tr[data-ours] .bar { background: var(--accent); }
-.num { width: 4ch; padding-inline-start: 8px; text-align: end; font-variant-numeric: tabular-nums; }
+.num { width: 4ch; white-space: nowrap; padding-inline-start: 8px; text-align: end; font-variant-numeric: tabular-nums; }
 .check figcaption { margin-top: 4px; font-size: var(--text-xs); color: var(--muted); }

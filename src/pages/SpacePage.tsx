@@ -11,6 +11,7 @@ import Menu from '../components/space/Menu.tsx'
 import StatusBar from '../components/space/StatusBar.tsx'
 import { ToolButton, ToolGroup, ToolNote, Toolbar } from '../components/space/Toolbar.tsx'
 import ModelCheck from '../components/space/ModelCheck.tsx'
+import WeekDose from '../components/space/WeekDose.tsx'
 import Panel from '../components/space/Panel.tsx'
 import ParameterSheet from '../components/space/ParameterSheet.tsx'
 import RotateGate from '../components/space/RotateGate.tsx'
@@ -18,7 +19,7 @@ import Recommendation, { type Tone } from '../components/space/Recommendation.ts
 import DriftChart, { type DriftPoint } from '../components/space/DriftChart.tsx'
 import VitalsGrid from '../components/space/VitalsGrid.tsx'
 import Workbench from '../components/space/Workbench.tsx'
-import { DEMO_REPS, OVERLAY_TAGS, SESSION } from '../data/demo.ts'
+import { DEMO_REPS, OVERLAY_TAGS, SESSION, WEEK } from '../data/demo.ts'
 import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, SHORT, withNoise, formLimitText, formMiss, pastForm, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, IDEAL, REHAB_MODEL } from '../engine/squatModel.ts'
 import type { Parameter } from '../types.ts'
@@ -60,11 +61,17 @@ function liveView(reps: RepFeatures[]) {
     : reps.map(() => ({ drift: 0, calibration: true }))
   const flags = scored.filter((r) => r.score > THRESHOLD).length
   const run = scored.length - 1 - scored.findLastIndex((r) => r.score <= THRESHOLD) // flagged reps in a row, ending now
-  return { rows, flagged, baseline, state, result, points, flags, last, run }
+  // a good rep counts toward the weekly dose: correct form and (after calibration) within the baseline
+  const good = reps.map((f, i) => !formMiss(f) && (i < CALIBRATION || all[i].score <= THRESHOLD))
+  const goodRun = good.length - 1 - good.lastIndexOf(false)
+  const bestRun = good.reduce((best, ok, i) => (ok ? Math.max(best, i - good.lastIndexOf(false, i)) : best), 0)
+  return { rows, flagged, baseline, state, result, points, flags, last, run, goodReps: good.filter(Boolean).length, goodRun, bestRun }
 }
 
 // Before the camera is on: the photo astronaut's set (reps 1–9 simulated, rep 10 = the photo), run like live reps.
 const DEMO_VIEW = liveView(DEMO_REPS)
+
+const weekText = (good: number) => `${WEEK.before + good} / ${WEEK.target} good reps this week`
 
 // The one thing to do now, for the large recommendation panel.
 function recommend(live: ReturnType<typeof liveView> | null, n: number, tracking: string | null): { decision: string; action: string; reason: string; next?: string; tone: Tone } {
@@ -80,7 +87,10 @@ function recommend(live: ReturnType<typeof liveView> | null, n: number, tracking
     const own = n === CALIBRATION && formMiss(live.baseline) ? 'Baseline short of correct form: ' : `Rep ${n}: `
     return { decision: 'Adjust form', action: CUES[miss], reason: `${own}${say(miss, live.last[miss])}`, next: 'Continue the set', tone: 'caution' }
   }
-  if (live?.result) return { decision: 'Continue', action: 'Good rep', reason: `Rep ${n}: correct form, within your baseline`, tone: 'good' }
+  if (live?.result) {
+    const streak = live.goodRun >= 3 ? ` · ${live.goodRun} good reps in a row` : ''
+    return { decision: 'Continue', action: 'Good rep', reason: `Rep ${n}: correct form, within your baseline${streak}`, next: weekText(live.goodReps), tone: 'good' }
+  }
   if (live) return { decision: 'Baseline set', action: 'Continue the set', reason: `Next reps are compared with your first ${CALIBRATION}`, tone: 'good' }
   if (tracking?.startsWith('LEGS')) return { decision: 'Framing', action: 'Step back, show your legs', reason: 'Hips and knees must be visible to score a rep', tone: 'caution' }
   return { decision: 'Ready', action: 'Squat to start', reason: tracking ?? '', tone: 'neutral' }
@@ -102,7 +112,7 @@ export default function SpacePage() {
   const [reps, setReps] = useState<RepFeatures[]>([])
   const newDetector = () => createRepDetector(MEDIAPIPE_UP, (f) => setReps((r) => [...r, f]))
   const [detect, setDetect] = useState(newDetector) // replaced on Reset baseline, so a half-done rep is dropped too
-  const [view, setView] = useState({ tags: true, chart: true, model: true, vitals: true, sounds: true })
+  const [view, setView] = useState({ tags: true, chart: true, vitals: true, sounds: true })
   const toggle = (k: keyof typeof view) => () => setView((v) => ({ ...v, [k]: !v[k] }))
   const [help, setHelp] = useState<HelpTopic | null>(null)
   const [tracking, setTracking] = useState<string | null>(null) // null until the pose model sees someone
@@ -144,7 +154,6 @@ export default function SpacePage() {
           <Menu label="View" items={[
             { label: 'Joint tags (simulated view)', checked: view.tags, onSelect: toggle('tags') },
             { label: 'Rep chart', checked: view.chart, onSelect: toggle('chart') },
-            { label: 'Rehab model check', checked: view.model, onSelect: toggle('model') },
             { label: 'Vitals', checked: view.vitals, onSelect: toggle('vitals') },
             { label: 'Sounds', checked: view.sounds, onSelect: toggle('sounds') },
           ]} />
@@ -189,27 +198,28 @@ export default function SpacePage() {
             <VitalsGrid vitals={vitals} />
           </Panel>
           )}
-          {view.model && (
-          <Panel title="Rehab model check · deep squat" note="UI-PRMD · PDDL 1.0" delay={60}>
+          <Panel title="This week · squat dose" note="SIMULATED prescription" delay={120}>
+            <WeekDose done={WEEK.before + shown.goodReps} target={WEEK.target} set={shown.goodReps} setTotal={live ? reps.length : DEMO_REPS.length} bestRun={shown.bestRun} />
+          </Panel>
+          <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD}>
+            {/* the evidence lives here, not on the rack screen: it is for the curious crew member, the ground team and judges */}
             <ModelCheck
               rows={[
-                { label: 'Textbook thresholds', caught: EVAL.base.caught },
-                { label: 'Rehab data, population', caught: EVAL.rehab.caught },
-                { label: 'Personal baseline only', caught: EVAL.personalBase.caught },
-                { label: 'Personal + rehab data', caught: EVAL.personal.caught, ours: true },
+                { label: 'Textbook limits only', caught: EVAL.base.at2sd.caught, falseAlerts: EVAL.base.at2sd.falseAlerts },
+                { label: 'Average of the rehab dataset', caught: EVAL.rehab.at2sd.caught, falseAlerts: EVAL.rehab.at2sd.falseAlerts },
+                { label: 'Your baseline + textbook spread', caught: EVAL.personalBase.at2sd.caught, falseAlerts: EVAL.personalBase.at2sd.falseAlerts },
+                { label: 'Theia: your baseline + rehab data', caught: EVAL.personal.at2sd.caught, falseAlerts: EVAL.personal.at2sd.falseAlerts, ours: true },
               ]}
-              caption={`Incorrect reps caught at ${pct(EVAL.falseAlertRate)} false alerts, people held out. ${EVAL.subjects} people, ${EVAL.correctReps} good + ${EVAL.incorrectReps} bad reps (Vicon). Untuned 2 sd: ${pct(EVAL.personal.at2sd.caught)} caught, ${pct(EVAL.personal.at2sd.falseAlerts)} false alerts.`}
+              caption={`Day one, no tuning (flag at 2 sd): bad reps caught · correct reps wrongly flagged. ${EVAL.subjects} people of UI-PRMD (Vicon), each held out; ${EVAL.correctReps} correct + ${EVAL.incorrectReps} acted-wrong reps. Tuned afterwards to ${pct(EVAL.falseAlertRate)} false alerts, both baseline methods reach ${pct(EVAL.personal.caught)}: rehab data matters because nobody can tune in orbit.`}
             />
-          </Panel>
-          )}
-          <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD} />
+          </HelpDialog>
         </>
       }
       status={
         <StatusBar
           items={live
-            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`]
-            : [`REP ${DEMO_REPS.length}`, `FLAGS ${DEMO_VIEW.flags}`, 'DEMO · SIMULATED', `MD ${s.missionDay}`]}
+            ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, `WEEK ${WEEK.before + live.goodReps}/${WEEK.target}`]
+            : [`REP ${DEMO_REPS.length}`, `FLAGS ${DEMO_VIEW.flags}`, `WEEK ${WEEK.before + DEMO_VIEW.goodReps}/${WEEK.target}`, 'DEMO · SIMULATED', `MD ${s.missionDay}`]}
           next={`Next: ${rec.action.toLowerCase()}${rec.next ? ` · ${rec.next.toLowerCase()}` : ''}`}
         />
       }

@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import styles from './HelpDialog.module.css'
 
 export type HelpTopic = 'decide' | 'privacy'
 
 // Modal help from the Help menu. Native <dialog>: focus trap, Escape and backdrop come for free.
-export default function HelpDialog({ topic, onClose, calibration, threshold }: { topic: HelpTopic | null; onClose: () => void; calibration: number; threshold: number }) {
+// `children` = the evidence shown under "How Theia decides".
+export default function HelpDialog({ topic, onClose, calibration, threshold, children }: { topic: HelpTopic | null; onClose: () => void; calibration: number; threshold: number; children?: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => { if (topic) ref.current?.showModal(); else ref.current?.close() }, [topic])
   return (
@@ -18,7 +19,10 @@ export default function HelpDialog({ topic, onClose, calibration, threshold }: {
             <li>Your first {calibration} reps become <b>your baseline</b>. You are compared with yourself, not with other people.</li>
             <li>Every later rep is scored by how far it strays from your baseline, in units of normal rep-to-rep variation learned from rehab data (UI-PRMD).</li>
             <li>Past {threshold.toFixed(1)} the rep is flagged and the worst measurement picks the cue, e.g. "Knees out".</li>
+            <li>Every rep is also checked against correct form (knees bent ≥ 90°, knees at least foot width, trunk ≤ 45°). Short of it, Theia nudges in amber, even if it matches your baseline.</li>
           </ol>
+          <h2 className={styles.sub}>Does rehab data help?</h2>
+          {children}
           <p>Theia gives technique guidance, never a diagnosis or a prescription.</p>
         </>
       )}

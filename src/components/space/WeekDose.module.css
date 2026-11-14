@@ -1,0 +1,8 @@
+.dose { display: grid; gap: 6px; padding: 10px 14px 12px; font: var(--text-sm)/1.4 var(--font-mono); color: var(--ink-2); }
+.head { display: flex; align-items: baseline; gap: 8px; }
+.count { font-size: var(--text-lg); color: var(--muted); font-variant-numeric: tabular-nums; }
+.count b { font-weight: 700; color: var(--ink); }
+.track { padding: 2px; background: var(--bg); box-shadow: var(--sunken); }
+.bar { display: block; height: 8px; background: var(--good); }
+.set { color: var(--ink-2); }
+.why { color: var(--muted); text-wrap: pretty; }

@@ -27,6 +27,10 @@ export const DEMO_REPS: RepFeatures[] = [
   PHOTO_REP,
 ]
 
+// Weekly squat dose: good reps (correct form, within baseline) toward the prescribed weekly count.
+// SIMULATED: the prescription and this week's earlier sessions. shortcut: not saved between sessions yet.
+export const WEEK = { target: 180, before: 132 }
+
 // Tags on the photo, from the same measurement.
 export const OVERLAY_TAGS: OverlayTag[] = [
   { joint: 'lk', dx: 22, dy: 24, label: 'KNEES/FEET 0.74', alert: true },
