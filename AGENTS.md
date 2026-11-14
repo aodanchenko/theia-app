@@ -39,7 +39,6 @@ src/
   capture/               useCameraStream (camera on/off), PoseCamera (camera + MediaPipe Pose, not wired in yet)
   store.js               the only file that touches storage
 functions/               Cloudflare Pages middleware (password)
-proto/                   design reference (static HTML). Not imported by the app.
 ```
 
 ## Design system
@@ -75,6 +74,12 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
 - **Motion:** entrances only, once. Use the `enter` class (rise, optional `--delay` in ms) or `pop` (SVG overlays). `prefers-reduced-motion` turns them off. No `transition: all`.
 - **Anything simulated says so**, with the visible label `SIMULATED` (see Vitals).
+
+### Design decisions (14 Nov, from the prototype round)
+
+- **Space** = the "THEIA Workbench" look: menu and toolbar, large camera with joint tags and a depth ruler, a parameter sheet, valgus-per-rep chart with rehab vs base model thresholds, simulated vitals with sparklines. NASA palette: red #fc3b30, blue #0062b3, black #000815.
+- **Earth** = "on the body": full-screen camera with a subtle skeleton, one cue card on top ("Push your right knee out"), an arrow at the joint, a huge rep count bottom-left, a round Stop button bottom-right. Atkinson Hyperlegible, warm paper colours.
+- **Rejected:** a text-heavy "procedure" bottom sheet; a spirit-level instrument (takes the bottom third from the camera); a 1970s printout look for Earth (not accessible enough); visual reskins of Space (hairline, mission control dark, flight data file, soft lab): the original stays.
 
 ## Components
 
