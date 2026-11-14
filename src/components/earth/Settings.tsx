@@ -23,6 +23,7 @@ export default function Settings({ profile, onChange, onEditAbout, onPlace, onRe
 
       <Group title="You">
         <Row label="About you" detail={summary} onClick={onEditAbout} />
+        <Toggle label="Sounds" on={profile.sounds !== false} onChange={(sounds) => onChange({ ...profile, sounds })} />
         <Toggle label="Speak the tips" on={profile.voice} onChange={(voice) => onChange({ ...profile, voice })} />
         <Toggle label="Bigger text" on={profile.bigText} onChange={(bigText) => onChange({ ...profile, bigText })} />
       </Group>

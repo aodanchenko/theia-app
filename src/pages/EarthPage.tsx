@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Landmark } from '@mediapipe/tasks-vision'
+import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision'
 import useCameraStream from '../capture/useCameraStream.ts'
+import { playChime } from '../capture/chimes.ts'
 import { speak, stopSpeaking } from '../capture/speak.ts'
 import AboutYou from '../components/earth/AboutYou.tsx'
+import ChunkyButton from '../components/earth/ChunkyButton.tsx'
+import CoachBar from '../components/earth/CoachBar.tsx'
 import CoachScreen from '../components/earth/CoachScreen.tsx'
-import CueCard from '../components/earth/CueCard.tsx'
 import DeviceFrame from '../components/earth/DeviceFrame.tsx'
-import EarthCamera from '../components/earth/EarthCamera.tsx'
+import EarthCamera, { type BodyMark } from '../components/earth/EarthCamera.tsx'
+import NoteCard from '../components/earth/NoteCard.tsx'
 import PlacePhone from '../components/earth/PlacePhone.tsx'
-import RepCounter from '../components/earth/RepCounter.tsx'
 import Settings from '../components/earth/Settings.tsx'
-import StartStopButton from '../components/earth/StartStopButton.tsx'
 import { activityLabel, createActivityTracker, type Activity } from '../engine/activity.ts'
-import { cueFor, judgeLastRep, startHint } from '../engine/earthCoach.ts'
+import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
 import { createRepDetector, fromMediaPipe, MEDIAPIPE_NOISE, MEDIAPIPE_UP, withNoise, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
 import { clearProfile, loadProfile, saveProfile } from '../store.ts'
@@ -39,40 +40,66 @@ export default function EarthPage() {
   useEffect(() => { if (wantsCamera && status === 'off' && !error) void start() }, [wantsCamera, status, error, start]) // after an error, wait for a tap on Start
   useEffect(() => { if (!wantsCamera) stop() }, [wantsCamera, stop])
 
-  // Coaching session.
+  // Coaching session: one set of SET_REPS reps.
   const [running, setRunning] = useState(true)
   const [reps, setReps] = useState<RepFeatures[]>([])
+  const [repPose, setRepPose] = useState<NormalizedLandmark[] | null>(null) // where the joints were when the last rep ended
   const [seen, setSeen] = useState(false)
   const [activity, setActivity] = useState<Activity>('away')
   const tracker = useRef(createActivityTracker())
-  const detector = useRef(createRepDetector(MEDIAPIPE_UP, (f) => setReps((r) => [...r, f])))
-  const runningRef = useRef(running)
-  useEffect(() => { runningRef.current = running }, [running])
+  const lastImage = useRef<NormalizedLandmark[] | null>(null)
+  const newDetector = () => createRepDetector(MEDIAPIPE_UP, (f) => { setReps((r) => (r.length < SET_REPS ? [...r, f] : r)); setRepPose(lastImage.current) })
+  const detector = useRef<ReturnType<typeof createRepDetector> | null>(null) // created on first pose, replaced on restart
+  const live = useRef(running) // the pose callback reads this without being recreated
+  useEffect(() => { live.current = running && reps.length < SET_REPS }, [running, reps.length])
 
-  const onPose = useCallback((world: Landmark[]) => {
+  const onPose = useCallback((world: Landmark[], image: NormalizedLandmark[]) => {
     const sk = fromMediaPipe(world)
+    lastImage.current = image
     setSeen(sk !== null)
     setActivity(tracker.current(sk, performance.now()))
-    if (sk && runningRef.current) detector.current(sk)
+    if (sk && live.current) (detector.current ??= newDetector())(sk)
   }, [])
 
+  const done = reps.length >= SET_REPS
+  const restart = () => { setReps([]); setRepPose(null); detector.current = null; setRunning(true); stopSpeaking() }
   const toggle = () => {
-    if (running) { setRunning(false); stopSpeaking(); return }
-    setReps([])
-    detector.current = createRepDetector(MEDIAPIPE_UP, (f) => setReps((r) => [...r, f]))
-    setRunning(true)
-    if (status === 'off') void start()
+    if (camera.error) return void start()
+    if (done) return restart()
+    if (running) { setRunning(false); stopSpeaking() } else setRunning(true)
   }
 
-  // Speak each new rep's tip.
+  // The note for right now, in priority order: camera problem → set done → paused → not in view → last rep → start.
   const verdict = reps.length ? judgeLastRep(reps, MODEL, THRESHOLD) : null
-  const repCue = verdict && profile ? cueFor(verdict, profile) : null
-  const spoken = useRef(0) // reps already spoken, so each rep's tip is said once
-  const say = repCue && profile?.voice && running ? repCue.title : null
+  const results: NoteKind[] = repResults(reps, MODEL, THRESHOLD)
+  const good = results.filter((r) => r === 'good').length
+  const note: { kind: NoteKind; title: string; line: string } =
+    camera.error ? { kind: 'idle', title: 'Camera is off', line: camera.error }
+    : camera.status !== 'on' ? { kind: 'idle', title: 'Starting the camera…', line: 'Allow the camera when your phone asks.' }
+    : done ? { kind: 'done', title: 'Set complete', line: `${good} of ${SET_REPS} reps on target.` }
+    : !running ? { kind: 'idle', title: 'Paused', line: 'Tap Resume when you are ready.' }
+    : activity === 'away' ? { kind: 'idle', title: 'Step into the frame', line: 'Whole body visible, 2–3 steps back.' }
+    : verdict && profile ? noteFor(verdict, reps.length, profile)
+    : { kind: 'idle', title: 'Start when ready', line: profile ? startHint(profile) : '' }
+
+  // Marks on the body for the last rep, while you stand between reps.
+  const marks: BodyMark[] = verdict && profile && repPose && activity === 'standing' && running && !done
+    ? markFor(verdict, profile).map((m) => {
+        const pts = m.joints.map((j) => repPose[j]).filter(Boolean)
+        return { x: pts.reduce((a, p) => a + p.x, 0) / pts.length, y: pts.reduce((a, p) => a + p.y, 0) / pts.length, label: m.label, arrow: m.arrow, kind: verdict.kind === 'good' ? 'good' as const : 'fix' as const }
+      }).filter((m) => !Number.isNaN(m.x))
+    : []
+
+  // Each new rep: a short sound (if on), then the note spoken (if voice is on), once.
+  const announced = useRef(0)
+  const sound = profile?.sounds !== false && running ? soundFor(results) : null
+  const say = profile?.voice && running && reps.length ? note.title.replace(' · ', ', ') : null
   useEffect(() => {
-    if (say && reps.length !== spoken.current) speak(say)
-    spoken.current = reps.length
-  }, [say, reps.length])
+    if (reps.length === announced.current) return
+    announced.current = reps.length
+    if (sound) playChime(sound)
+    if (say) setTimeout(() => speak(say), sound ? 450 : 0) // let the sound finish before the voice; not cancelled if the note changes meanwhile
+  }, [reps.length, sound, say])
 
   let content
   if (screen === 'about' || !profile) {
@@ -90,35 +117,22 @@ export default function EarthPage() {
         onChange={save}
         onEditAbout={() => { setEditing(true); setScreen('about') }}
         onPlace={() => setScreen('place')}
-        onReset={() => { clearProfile(); setProfile(null); setReps([]); setScreen('about') }}
+        onReset={() => { clearProfile(); setProfile(null); restart(); setScreen('about') }}
         onClose={() => setScreen('live')}
       />
     )
   } else {
-    const cam = <EarthCamera stream={camera.stream} onPose={onPose} />
     content = screen === 'place'
-      ? <PlacePhone camera={cam} seen={seen} error={camera.error} onRetry={() => void start()} onDone={() => setScreen('live')} />
+      ? <PlacePhone camera={<EarthCamera stream={camera.stream} onPose={onPose} />} seen={seen} error={camera.error} onRetry={() => void start()} onDone={() => setScreen('live')} />
       : (
         <CoachScreen
-          camera={cam}
-          label={camera.status === 'on' ? activityLabel(activity, profile.position === 'seated') : undefined}
-          onMenu={() => setScreen('settings')}
-          cue={<LiveCue key={repCue?.title ?? 'start'} profile={profile} cameraError={camera.error} cameraOn={camera.status === 'on'} running={running} away={activity === 'away'} cue={repCue} />}
-          counter={<RepCounter done={reps.length} />}
-          action={<StartStopButton running={running && camera.status === 'on'} onToggle={toggle} />}
+          bar={<CoachBar results={results} total={SET_REPS} paused={!running} onPause={toggle} onSettings={() => setScreen('settings')} />}
+          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position === 'seated') : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
+          note={<NoteCard kind={note.kind} title={note.title} line={note.line} />}
+          action={<ChunkyButton tone={done ? 'good' : undefined} onClick={toggle}>{camera.error ? 'Try again' : done ? 'Start another set' : running ? 'Pause' : 'Resume'}</ChunkyButton>}
         />
       )
   }
 
   return <DeviceFrame>{content}</DeviceFrame>
-}
-
-// The one instruction for right now, in priority order: camera problem → paused → not in view → last rep's tip → start.
-function LiveCue({ profile, cameraError, cameraOn, running, away, cue }: { profile: EarthProfile; cameraError: string | null; cameraOn: boolean; running: boolean; away: boolean; cue: { title: string; hint: string } | null }) {
-  if (cameraError) return <CueCard title="Camera is off" hint={`${cameraError} Then tap Start.`} />
-  if (!cameraOn) return <CueCard title="Starting the camera…" hint="Allow the camera when your phone asks." />
-  if (!running) return <CueCard title="Paused" hint="Tap Start when you are ready." />
-  if (away) return <CueCard title="Step into view" hint="Your whole body should fit on the screen." />
-  if (cue) return <CueCard title={cue.title} hint={cue.hint} />
-  return <CueCard title="Start moving" hint={startHint(profile)} />
 }

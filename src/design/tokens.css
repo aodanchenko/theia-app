@@ -58,17 +58,33 @@
   --font-body: 'CMU Serif', 'Latin Modern Roman', Georgia, serif;
 }
 
-/* Earth: rehab at home on a phone. Warm, large, one instruction at a time. */
+/* Earth: rehab at home on a phone. "On you" design, Linen & Pine palette (decided in /lab/earth-style, 14 Nov).
+   One warm neutral hue; green = on target, amber = adjust (always with ✓ / ! / a word, never colour alone); no red. */
 [data-theme="earth"] {
-  --bg: #f3eee4;
-  --surface: #f3eee4;
-  --ink: #1c1a17;
-  --muted: #625a4e;
-  --rule: #d8cfbf;
-  --alert: #b4560f;
-  --cue: #f0a24a;
-  --good: #2f7a4b;
+  --bg: oklch(0.965 0.012 80);       /* paper */
+  --surface: oklch(0.99 0.006 80);   /* cards */
+  --rule: oklch(0.89 0.018 80);      /* lines, card rings */
+  --lip: oklch(0.82 0.024 80);       /* the solid lip under pressable things */
+  --ink: oklch(0.22 0.02 60);
+  --ink-lip: oklch(0.1 0.01 60);
+  --muted: oklch(0.5 0.03 65);
+  --good: oklch(0.5 0.09 155);       /* on target */
+  --good-lip: oklch(0.35 0.09 155);
+  --good-soft: oklch(0.93 0.05 155);
+  --good-text: oklch(0.42 0.09 155); /* headings on --good-soft */
+  --fix: oklch(0.7 0.14 65);         /* adjust; L above 0.6, so dark text on it */
+  --fix-lip: oklch(0.54 0.14 65);
+  --fix-soft: oklch(0.93 0.05 65);
+  --fix-text: oklch(0.42 0.12 65);   /* headings on --fix-soft */
+  --alert: var(--fix-text);          /* Earth has no red: "alert" is the adjust colour, dark enough for text */
+  --cue: var(--fix);                 /* overlay drawn on the camera */
+  --frame: oklch(0.27 0.015 60);     /* camera frame background */
+  --lip-depth: 4px;
+  --r-frame: 10px;                   /* corner scale 0.5: frame 10 / card 8 / tag 5 */
+  --r-card: 8px;
+  --r-tag: 5px;
   --font-body: var(--font-hyperlegible);
+  --font-num: var(--font-sans);      /* counts in Plex: Atkinson draws a slashed zero */
   --text-md: 18px;
   --text-lg: 30px;
   --text-xl: 96px;

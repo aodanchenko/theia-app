@@ -2,13 +2,13 @@
 .bar { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
 .back { min-height: 48px; padding: 0 4px; font-size: var(--text-md); font-weight: 700; color: var(--ink); }
 .step { display: flex; gap: 6px; }
-.step i { width: 18px; height: 6px; border-radius: 3px; background: var(--rule); }
+.step i { width: 18px; height: 8px; border-radius: 2px; background: var(--rule); }
 .step i[data-on] { background: var(--ink); }
 .intro { margin-top: 24px; font-size: var(--text-md); color: var(--muted); }
 .q { margin-top: 12px; font-size: var(--text-lg); font-weight: 700; line-height: 1.1; text-wrap: balance; }
 .why { margin-top: 10px; font-size: var(--text-md); color: var(--muted); text-wrap: pretty; }
 .options { display: grid; gap: 12px; margin-top: auto; padding-top: 28px; }
-.option { min-height: 64px; padding: 0 20px; border: 2px solid var(--ink); border-radius: 18px; background: var(--surface); font-size: var(--text-md); font-weight: 700; text-align: left; transition: transform var(--dur-press) ease-out, background-color var(--dur-press) ease-out; }
-.option:active { transform: scale(.97); }
-.option[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.option { min-height: 64px; padding: 0 20px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule), 0 var(--lip-depth) 0 var(--lip); font-size: var(--text-md); font-weight: 700; text-align: left; touch-action: manipulation; transition: transform 90ms ease-out, box-shadow 90ms ease-out, background-color 90ms ease-out; }
+.option:active { transform: translateY(var(--lip-depth)); box-shadow: 0 0 0 2px var(--rule); }
+.option[aria-pressed="true"] { background: var(--ink); color: var(--bg); box-shadow: 0 var(--lip-depth) 0 var(--ink-lip); }
 .option:focus-visible, .back:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }

@@ -9,12 +9,12 @@
 .guide { stroke: var(--cue); stroke-width: 2; stroke-dasharray: 4 4; }
 .measure { fill: none; stroke: var(--muted); stroke-width: 1.5; }
 .label { fill: var(--muted); font-size: 11px; font-weight: 700; }
-.preview { position: relative; flex: 1; min-height: 160px; border: 4px solid var(--rule); border-radius: 22px; overflow: hidden; transition: border-color 200ms ease-out; }
-.preview[data-seen] { border-color: var(--good); }
-.badge { position: absolute; left: 12px; bottom: 12px; padding: 8px 14px; border-radius: 999px; background: var(--surface); font-size: var(--text-md); font-weight: 700; }
+.preview { position: relative; display: flex; flex: 1; min-height: 160px; border-radius: var(--r-frame); box-shadow: 0 0 0 4px var(--rule); transition: box-shadow 200ms ease-out; }
+.preview[data-seen] { box-shadow: 0 0 0 4px var(--good); }
+.badge { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: var(--r-tag); background: var(--surface); font-size: var(--text-md); font-weight: 700; }
 .preview[data-seen] .badge { background: var(--good); color: #fff; }
-.go { min-height: 60px; border-radius: 18px; background: var(--surface); border: 2px solid var(--ink); font-size: var(--text-md); font-weight: 700; transition: transform var(--dur-press) ease-out; }
-.go[data-ready] { background: var(--ink); color: var(--bg); }
-.go:active { transform: scale(.97); }
+.go { min-height: 56px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule), 0 var(--lip-depth) 0 var(--lip); font-size: calc(var(--text-md) * .9); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; touch-action: manipulation; transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.go[data-ready] { background: var(--good); color: #fff; box-shadow: 0 var(--lip-depth) 0 var(--good-lip); }
+.go:active { transform: translateY(var(--lip-depth)); box-shadow: none; }
 .go:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-.error { position: absolute; left: 12px; right: 12px; top: 12px; padding: 10px 14px; border-radius: 14px; background: var(--surface); font-size: var(--text-md); }
+.error { position: absolute; left: 12px; right: 12px; top: 12px; padding: 10px 14px; border-radius: var(--r-card); background: var(--surface); font-size: var(--text-md); }

@@ -1,0 +1,11 @@
+.bar { display: flex; align-items: center; gap: 10px; }
+.icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-card); color: var(--muted); touch-action: manipulation; }
+.icon:active { background: var(--rule); }
+.icon:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.segs { flex: 1; display: flex; gap: 4px; }
+.segs i { flex: 1; height: 14px; border-radius: 3px; background: var(--rule); }
+.segs i[data-r="learn"] { background: var(--lip); }
+.segs i[data-r="good"] { background: var(--good); }
+.segs i[data-r="fix"] { background: var(--fix); }
+.count { min-width: 3.4ch; font: 600 var(--text-md) var(--font-num); font-variant-numeric: tabular-nums; color: var(--muted); }
+.count b { font-weight: 700; color: var(--ink); }
