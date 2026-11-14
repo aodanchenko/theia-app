@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { DrawingUtils, FilesetResolver, PoseLandmarker, type Landmark } from '@mediapipe/tasks-vision'
+import { createLandmarkSmoother } from '../engine/oneEuro.ts'
 
 // shortcut: wasm and model load from the internet on first use; copy them into public/ for fully offline use.
 const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
 const MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task'
 
 // While `enabled`, runs MediaPipe Pose on the playing <video>, draws the skeleton on the canvas, and calls onPose
-// with the 33 world landmarks (metres) for every frame with a person in it. Video never leaves the device.
+// with the 33 world landmarks (metres) for every frame with a person in it. Both the drawn and the reported landmarks are
+// One-Euro smoothed. Video never leaves the device.
 export default function usePose(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
@@ -35,6 +37,7 @@ export default function usePose(
       const pose = landmarker
       const draw = new DrawingUtils(ctx)
       const joint = getComputedStyle(ctx.canvas).getPropertyValue('--good').trim() // joints in phosphor green: red is only for flags
+      const smoothImage = createLandmarkSmoother(), smoothWorld = createLandmarkSmoother()
       let lastTime = -1
       const loop = () => {
         frame = requestAnimationFrame(loop)
@@ -42,12 +45,13 @@ export default function usePose(
         lastTime = video.currentTime
         ctx.canvas.width = video.videoWidth
         ctx.canvas.height = video.videoHeight
-        const result = pose.detectForVideo(video, performance.now())
-        const landmarks = result.landmarks[0]
-        if (!landmarks) return
+        const now = performance.now()
+        const result = pose.detectForVideo(video, now)
+        if (!result.landmarks[0]) return
+        const landmarks = smoothImage(result.landmarks[0], now)
         draw.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
         draw.drawLandmarks(landmarks, { color: joint, radius: 4 })
-        onPoseRef.current(result.worldLandmarks[0])
+        onPoseRef.current(smoothWorld(result.worldLandmarks[0], now))
       }
       loop()
       setResult('running')
