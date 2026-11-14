@@ -1,10 +1,11 @@
+import type { Limits } from '../../types.ts'
 import styles from './RepChart.module.css'
 
 // Value per rep as bars, with the personal baseline band and two model thresholds.
 // Bars at or above the rehab threshold are flagged; reps not done yet show as stubs.
-export default function RepChart({ values, total, limits, label }) {
-  const x = (i) => 34 + i * (280 / total)
-  const y = (d) => 116 - d * 8.4
+export default function RepChart({ values, total, limits, label }: { values: number[]; total: number; limits: Limits; label: string }) {
+  const x = (i: number) => 34 + i * (280 / total)
+  const y = (d: number) => 116 - d * 8.4
   const firstFlag = values.findIndex((v) => v >= limits.rehab)
   const [lo, hi] = limits.baseline
 

@@ -1,5 +1,11 @@
 // Runs on Cloudflare before any file is served: the whole app sits behind one shared password (secret APP_PASSWORD).
-export async function onRequest({ request, env, next }) {
+interface Context {
+  request: Request
+  env: { APP_PASSWORD?: string }
+  next: () => Response | Promise<Response>
+}
+
+export async function onRequest({ request, env, next }: Context): Promise<Response> {
   if (!env.APP_PASSWORD) return new Response('APP_PASSWORD is not set', { status: 500 }) // fail closed
   const [scheme, encoded] = (request.headers.get('Authorization') ?? '').split(' ')
   if (scheme === 'Basic' && encoded) {
@@ -16,15 +22,15 @@ export async function onRequest({ request, env, next }) {
 }
 
 // Content is behind a password: never let a shared cache keep it. Hashed /assets/ may stay in the browser.
-function privateCache(response, path) {
+function privateCache(response: Response, path: string): Response {
   const res = new Response(response.body, response)
   res.headers.set('Cache-Control', path.startsWith('/assets/') ? 'private, max-age=31536000, immutable' : 'private, no-cache')
   return res
 }
 
 // Compare SHA-256 hashes so the check takes the same time whatever the input.
-async function same(a, b) {
-  const hash = async (s) => new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))
+async function same(a: string, b: string): Promise<boolean> {
+  const hash = async (s: string) => new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))
   const [x, y] = await Promise.all([hash(a), hash(b)])
   return x.every((v, i) => v === y[i])
 }

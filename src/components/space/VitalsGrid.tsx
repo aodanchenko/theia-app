@@ -1,7 +1,8 @@
-import Sparkline from './Sparkline.jsx'
+import type { Vital } from '../../types.ts'
+import Sparkline from './Sparkline.tsx'
 import styles from './VitalsGrid.module.css'
 
-export default function VitalsGrid({ vitals }) {
+export default function VitalsGrid({ vitals }: { vitals: Vital[] }) {
   return (
     <div className={styles.grid}>
       {vitals.map(({ name, value, unit, alert, trend }) => (

@@ -1,7 +1,9 @@
 // Simulated demo session (ARED squat, set 2). Shown in the UI as SIMULATED.
-// Replace with engine output once engine/decide.js exists.
+// Replace with engine output once engine/decide.ts exists.
 
-export const SESSION = {
+import type { Limits, OverlayTag, Parameter, Session, Vital } from '../types.ts'
+
+export const SESSION: Session = {
   file: 'ARED_MD112_SET2.thx',
   missionDay: 112,
   set: 2,
@@ -15,7 +17,7 @@ export const SESSION = {
   cue: 'Knees out',
 }
 
-export const PARAMETERS = [
+export const PARAMETERS: Parameter[] = [
   { name: 'R knee valgus', now: '9°', base: '3°', delta: '+6', flag: 'rehab', formula: '=VALGUS(R_HIP, R_KNEE, R_ANKLE)' },
   { name: 'L knee valgus', now: '2°', base: '2°', delta: '0' },
   { name: 'Hip flexion', now: '94°', base: '96°', delta: '−2' },
@@ -26,17 +28,17 @@ export const PARAMETERS = [
 ]
 
 // R knee valgus per completed rep, degrees.
-export const VALGUS_BY_REP = [2, 3, 3, 4, 5, 7, 9]
-export const VALGUS_LIMITS = { baseline: [2, 4], rehab: 6, base: 10 }
+export const VALGUS_BY_REP: number[] = [2, 3, 3, 4, 5, 7, 9]
+export const VALGUS_LIMITS: Limits = { baseline: [2, 4], rehab: 6, base: 10 }
 
-export const OVERLAY_TAGS = [
+export const OVERLAY_TAGS: OverlayTag[] = [
   { joint: 'rk', dx: 20, dy: 4, label: 'KNEE 9°', alert: true },
   { joint: 'rh', dx: 16, dy: -6, label: 'HIP 94°' },
   { joint: 'rs', dx: 16, dy: 30, label: 'TRUNK 4°' },
 ]
 
 // Smooth fake trend for sparklines: 12 points in 2..14, rising when `up`.
-function trend(seed, up) {
+function trend(seed: number, up: boolean): number[] {
   let y = 8
   return Array.from({ length: 12 }, (_, i) => {
     y = Math.max(2, Math.min(14, y + (Math.sin(seed * 7 + i * 1.9) + (up ? 0.35 : -0.15)) * 2.2))
@@ -44,7 +46,7 @@ function trend(seed, up) {
   })
 }
 
-export const VITALS = [
+export const VITALS: Vital[] = [
   { name: 'Heart rate', value: '128', unit: 'bpm', alert: true, trend: trend(1, true) },
   { name: 'HRV rMSSD', value: '38', unit: 'ms', alert: true, trend: trend(2, true) },
   { name: 'SpO2', value: '97', unit: '%', trend: trend(3, false) },

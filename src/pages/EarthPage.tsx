@@ -1,8 +1,8 @@
-import SimulatedCamera from '../components/SimulatedCamera.jsx'
-import CoachScreen from '../components/earth/CoachScreen.jsx'
-import CueCard from '../components/earth/CueCard.jsx'
-import RepCounter from '../components/earth/RepCounter.jsx'
-import StopButton from '../components/earth/StopButton.jsx'
+import SimulatedCamera from '../components/SimulatedCamera.tsx'
+import CoachScreen from '../components/earth/CoachScreen.tsx'
+import CueCard from '../components/earth/CueCard.tsx'
+import RepCounter from '../components/earth/RepCounter.tsx'
+import StopButton from '../components/earth/StopButton.tsx'
 
 export default function EarthPage() {
   return (

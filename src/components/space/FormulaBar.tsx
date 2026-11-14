@@ -1,6 +1,6 @@
 import styles from './FormulaBar.module.css'
 
-export default function FormulaBar({ cell, formula }) {
+export default function FormulaBar({ cell, formula }: { cell: string; formula?: string }) {
   return (
     <div className={styles.bar}>
       <span className={styles.cell}>{cell}</span>

@@ -1,25 +1,37 @@
-import { useId } from 'react'
+import { useId, type SVGProps } from 'react'
+import type { Joint, OverlayTag, Theme } from '../types.ts'
 import styles from './SimulatedCamera.module.css'
 
 // Drawn stand-in for the live camera: a person mid-squat, front view, right knee drifting inward.
 // Swap for <PoseCamera> when the live feed is wired in.
-const JOINTS = {
+const JOINTS: Record<Joint, [x: number, y: number]> = {
   head: [180, 118], neck: [180, 150], ls: [142, 170], rs: [218, 170], le: [124, 226], re: [236, 226],
   lw: [156, 250], rw: [204, 250], lh: [158, 296], rh: [202, 296], lk: [126, 372], rk: [192, 378], la: [138, 462], ra: [222, 462],
 }
-const BONES = [['neck', 'ls'], ['neck', 'rs'], ['ls', 'le'], ['le', 'lw'], ['rs', 're'], ['re', 'rw'], ['ls', 'lh'], ['rs', 'rh'], ['lh', 'rh'], ['lh', 'lk'], ['lk', 'la'], ['rh', 'rk'], ['rk', 'ra']]
-const SCENE = {
+const BONES: [Joint, Joint][] = [['neck', 'ls'], ['neck', 'rs'], ['ls', 'le'], ['le', 'lw'], ['rs', 're'], ['re', 'rw'], ['ls', 'lh'], ['rs', 'rh'], ['lh', 'rh'], ['lh', 'lk'], ['lk', 'la'], ['rh', 'rk'], ['rk', 'ra']]
+const SCENE: Record<Theme, { wall: [string, string]; ground: string; body: string }> = {
   space: { wall: ['#4a5462', '#2a313b'], ground: '#22282f', body: '#141a22' },
   earth: { wall: ['#b9ab95', '#8f8270'], ground: '#7d715f', body: '#4b4236' },
 }
 
-const Bone = ({ from, to, ...props }) => (
+const Bone = ({ from, to, ...props }: { from: Joint; to: Joint } & SVGProps<SVGLineElement>) => (
   <line x1={JOINTS[from][0]} y1={JOINTS[from][1]} x2={JOINTS[to][0]} y2={JOINTS[to][1]} strokeLinecap="round" {...props} />
 )
 
 // `figureHeight` sizes the person; a smaller value than `height` leaves floor below them.
 // `scene={false}` draws only the overlay (skeleton, cue, tags), for use on top of live video.
-export default function SimulatedCamera({ theme, width = 360, height, figureHeight = height, scene = true, arrow = false, tags = [], ruler = false }) {
+interface Props {
+  theme: Theme
+  width?: number
+  height: number
+  figureHeight?: number
+  scene?: boolean
+  arrow?: boolean
+  tags?: OverlayTag[]
+  ruler?: boolean
+}
+
+export default function SimulatedCamera({ theme, width = 360, height, figureHeight = height, scene = true, arrow = false, tags = [], ruler = false }: Props) {
   const id = useId()
   const palette = SCENE[theme]
   const scale = Math.min(1.08, (figureHeight - 94) / 390)
@@ -50,7 +62,7 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
 
         <g className={styles.skeleton}>
           {BONES.map(([a, b]) => <Bone key={a + b} from={a} to={b} strokeWidth="1.4" />)}
-          {Object.entries(JOINTS).filter(([k]) => k !== 'head').map(([k, [x, y]]) => <circle key={k} cx={x} cy={y} r="2.6" />)}
+          {Object.entries(JOINTS).filter(([joint]) => joint !== 'head').map(([joint, [x, y]]) => <circle key={joint} cx={x} cy={y} r="2.6" />)}
         </g>
 
         <g className={styles.cue}>

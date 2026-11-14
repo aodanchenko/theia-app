@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const ERRORS = {
+const ERRORS: Record<string, string> = {
   NotAllowedError: 'Camera access was blocked. Allow it in the browser settings and try again.',
   NotFoundError: 'No camera found on this device.',
   NotReadableError: 'The camera is busy in another app.',
@@ -8,10 +8,10 @@ const ERRORS = {
 
 // Front camera as a MediaStream. Video stays on the device; tracks stop on `stop` and on unmount.
 export default function useCameraStream() {
-  const [stream, setStream] = useState(null)
-  const [status, setStatus] = useState('off') // off | starting | on
-  const [error, setError] = useState(null)
-  const current = useRef(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [status, setStatus] = useState<'off' | 'starting' | 'on'>('off')
+  const [error, setError] = useState<string | null>(null)
+  const current = useRef<MediaStream | null>(null)
   const mounted = useRef(true)
 
   const stop = useCallback(() => {
@@ -32,8 +32,9 @@ export default function useCameraStream() {
       setStream(s)
       setStatus('on')
     } catch (e) {
+      const { name, message } = e as Error
       setStatus('off')
-      setError(ERRORS[e.name] ?? `Could not start the camera: ${e.message}`)
+      setError(ERRORS[name] ?? `Could not start the camera: ${message}`)
     }
   }, [])
 

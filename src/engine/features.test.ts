@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { angle, kneeAngles, LM } from './features.js'
+import { angle, kneeAngles, LM } from './features.ts'
 
 test('angle: straight line is 180, right angle is 90', () => {
   assert.equal(angle({ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }), 180)

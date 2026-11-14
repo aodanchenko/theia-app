@@ -1,7 +1,7 @@
 import styles from './CueCard.module.css'
 
 // The one instruction for right now. Keep `title` to a short imperative sentence.
-export default function CueCard({ title, hint }) {
+export default function CueCard({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className={`enter ${styles.card}`} role="status">
       <p className={styles.title}>{title}</p>

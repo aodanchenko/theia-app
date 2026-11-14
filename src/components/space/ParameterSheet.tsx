@@ -1,9 +1,10 @@
+import type { Parameter } from '../../types.ts'
 import styles from './ParameterSheet.module.css'
 
 const COLUMNS = ['A', 'B', 'C', 'D', 'E']
 
 // Spreadsheet of movement parameters: now vs personal baseline. Row 1 is the header row.
-export default function ParameterSheet({ rows, selected = 0 }) {
+export default function ParameterSheet({ rows, selected = 0 }: { rows: Parameter[]; selected?: number }) {
   return (
     <table className={`enter ${styles.sheet}`}>
       <thead>

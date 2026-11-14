@@ -1,13 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { onRequest } from './_middleware.js'
+import { onRequest } from './_middleware.ts'
 
-const call = (auth, password = 'secret', url = 'https://x/') => onRequest({
+const call = (auth: string | undefined, password = 'secret', url = 'https://x/') => onRequest({
   request: new Request(url, { headers: auth ? { Authorization: auth } : {} }),
   env: { APP_PASSWORD: password },
   next: () => new Response('app'),
 })
-const basic = (s) => 'Basic ' + btoa(s)
+const basic = (s: string) => 'Basic ' + btoa(s)
 
 test('right password passes, any username, and is never shared-cached', async () => {
   const res = await call(basic('anyone:secret'))
