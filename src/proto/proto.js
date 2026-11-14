@@ -33,7 +33,6 @@ function camera(app,h,o={}){
   <rect width="${W}" height="${h}" fill="url(#${id}v)"/><rect width="${W}" height="${h}" filter="url(#${id}n)" opacity=".22"/>
   ${rule}${br}</svg>`;
 }
-const status=`<div class="status"><span class="tab">9:41</span><i></i></div>`;
 
 function spark(seed,up){let y=8,pts=[];for(let i=0;i<12;i++){y+=((Math.sin(seed*7+i*1.9)+(up?.35:-.15))*2.2);y=Math.max(2,Math.min(14,y));pts.push(`${i*5},${16-y}`)}return `<svg viewBox="0 0 56 16"><polyline points="${pts.join(' ')}" fill="none" stroke="${up?'#fc3b30':'#0062b3'}" stroke-width="1.4"/></svg>`;}
 function vitals(){
@@ -58,7 +57,7 @@ const stage=document.getElementById('stage');
 const pair=(e,s)=>stage.dataset.side==='earth'?e:s;
 stage.innerHTML=(
 ()=>pair(
-`<div class="phone earth v2">${status}<div class="cam">${camera('earth',760,{arrow:true,vis:640})}</div>
+`<div class="phone earth v2"><div class="cam">${camera('earth',760,{arrow:true,vis:640})}</div>
   <div class="say in"><p>Push your right knee out</p><small>Like the arrow shows</small></div>
   <div class="count in d2"><b class="tab">7</b><span>of 10</span></div>
   <button class="stop press in d2" aria-label="Stop">Stop</button></div>`,
