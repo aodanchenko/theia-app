@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Landmark } from '@mediapipe/tasks-vision'
+import { playChime } from '../capture/chimes.ts'
 import useCameraStream from '../capture/useCameraStream.ts'
 import useSimVitals from '../data/useSimVitals.ts'
 import SimulatedCamera from '../components/SimulatedCamera.tsx'
@@ -86,7 +87,7 @@ export default function SpacePage() {
   const [reps, setReps] = useState<RepFeatures[]>([])
   const newDetector = () => createRepDetector(MEDIAPIPE_UP, (f) => setReps((r) => [...r, f]))
   const [detect, setDetect] = useState(newDetector) // replaced on Reset baseline, so a half-done rep is dropped too
-  const [view, setView] = useState({ tags: true, chart: true, model: true, vitals: true })
+  const [view, setView] = useState({ tags: true, chart: true, model: true, vitals: true, sounds: true })
   const toggle = (k: keyof typeof view) => () => setView((v) => ({ ...v, [k]: !v[k] }))
   const [help, setHelp] = useState<HelpTopic | null>(null)
   const [tracking, setTracking] = useState<string | null>(null) // null until the pose model sees someone
@@ -100,6 +101,19 @@ export default function SpacePage() {
   const live = reps.length > 0 ? liveView(reps) : null
   const vitals = useSimVitals(camera.status === 'on', reps.length)
 
+  // Theia chimes on each new live rep: baseline learned (rep 3), on target, adjust, every 5 on target in a row.
+  const heard = useRef(0)
+  const streak = useRef(0)
+  const flaggedNow = !!live?.flagged
+  useEffect(() => {
+    const n = reps.length
+    if (n <= heard.current) { heard.current = n; if (n === 0) streak.current = 0; return } // reset or nothing new
+    heard.current = n
+    if (n < CALIBRATION) return
+    const chime = n === CALIBRATION ? 'baseline' : flaggedNow ? 'fix' : ++streak.current % 5 === 0 ? 'streak' : 'good'
+    if (flaggedNow) streak.current = 0
+    if (view.sounds) playChime(chime)
+  }, [reps.length, flaggedNow, view.sounds])
   const rec = recommend(live, reps.length, tracking)
   const basis = live
     ? `vs your baseline (first ${CALIBRATION} reps) · UI-PRMD rehab scale · known cause: ${s.knownCause}`
@@ -116,6 +130,7 @@ export default function SpacePage() {
             { label: 'Rep chart', checked: view.chart, onSelect: toggle('chart') },
             { label: 'Rehab model check', checked: view.model, onSelect: toggle('model') },
             { label: 'Vitals', checked: view.vitals, onSelect: toggle('vitals') },
+            { label: 'Sounds', checked: view.sounds, onSelect: toggle('sounds') },
           ]} />
           <Menu label="Help" items={[
             { label: 'How Theia decides', onSelect: () => setHelp('decide') },
