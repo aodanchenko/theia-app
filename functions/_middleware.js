@@ -5,9 +5,21 @@ export async function onRequest({ request, env, next }) {
   if (scheme === 'Basic' && encoded) {
     const decoded = atob(encoded)
     const password = decoded.slice(decoded.indexOf(':') + 1) // username is ignored
-    if (await same(password, env.APP_PASSWORD)) return next()
+    if (await same(password, env.APP_PASSWORD)) {
+      const url = new URL(request.url)
+      // Routes are /space and /earth; old /space/ pages from the multi-page build may linger in Cloudflare's cache.
+      if (url.pathname.length > 1 && url.pathname.endsWith('/')) return Response.redirect(`${url.origin}${url.pathname.replace(/\/+$/, '')}${url.search}`, 308)
+      return privateCache(await next(), url.pathname)
+    }
   }
   return new Response('Password required', { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Theia", charset="UTF-8"' } })
+}
+
+// Content is behind a password: never let a shared cache keep it. Hashed /assets/ may stay in the browser.
+function privateCache(response, path) {
+  const res = new Response(response.body, response)
+  res.headers.set('Cache-Control', path.startsWith('/assets/') ? 'private, max-age=31536000, immutable' : 'private, no-cache')
+  return res
 }
 
 // Compare SHA-256 hashes so the check takes the same time whatever the input.
