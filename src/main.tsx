@@ -15,6 +15,7 @@ const ROUTES: Record<string, { title: string; theme: Theme | 'home'; Page: Compo
   ...(import.meta.env.DEV ? {
     '/proto/space': { title: 'Theia · Space prototypes', theme: 'space' as Theme, Page: lazy(() => import('./proto/space/Harness.tsx')) },
     '/proto/sounds': { title: 'Theia · Rep sounds', theme: 'space' as Theme, Page: lazy(() => import('./proto/sounds/SoundsLab.tsx')) },
+    '/proto/earth': { title: 'Theia · Earth prototypes', theme: 'earth' as Theme, Page: lazy(() => import('./proto/earth/Harness.tsx')) },
   } : {}),
 }
 

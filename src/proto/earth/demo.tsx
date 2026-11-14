@@ -1,0 +1,118 @@
+// Throwaway: a scripted 10-rep session shared by the /proto/earth variants. Nothing in production imports this.
+import { useEffect, useRef, useState } from 'react'
+import { speak, stopSpeaking } from '../../capture/speak.ts'
+import SimulatedCamera from '../../components/SimulatedCamera.tsx'
+import { activityLabel, type Activity } from '../../engine/activity.ts'
+import { cueFor, startHint, type Verdict } from '../../engine/earthCoach.ts'
+import type { EarthProfile } from '../../types.ts'
+
+export const PROFILE: EarthProfile = { side: 'right', prosthesis: false, aid: true, position: 'standing', voice: false, bigText: false }
+export const TOTAL = 10
+
+const VERDICTS: Verdict[] = [
+  { kind: 'learning', done: 1 }, { kind: 'learning', done: 2 }, { kind: 'learning', done: 3 },
+  { kind: 'good' }, { kind: 'good' }, { kind: 'fix', feature: 'kneeWidth' }, { kind: 'good' },
+  { kind: 'fix', feature: 'trunkLean' }, { kind: 'good' }, { kind: 'good' },
+]
+type Phase = 'away' | 'ready' | 'moving' | 'result' | 'done'
+interface Step { phase: Phase; ms: number; activity: Activity; rep: number }
+const STEPS: Step[] = [
+  { phase: 'away', ms: 2600, activity: 'away', rep: 0 },
+  { phase: 'ready', ms: 2600, activity: 'standing', rep: 0 },
+  ...VERDICTS.flatMap((_, i): Step[] => [
+    { phase: 'moving', ms: 900, activity: 'goingDown', rep: i },
+    { phase: 'moving', ms: 600, activity: 'holding', rep: i },
+    { phase: 'moving', ms: 900, activity: 'comingUp', rep: i },
+    { phase: 'result', ms: 2000, activity: 'standing', rep: i + 1 },
+  ]),
+  { phase: 'done', ms: Infinity, activity: 'standing', rep: TOTAL },
+]
+
+export interface DemoState {
+  phase: Phase
+  paused: boolean
+  activity: Activity
+  label: string // what Theia sees you doing
+  rep: number // reps done
+  verdict: Verdict | null // last rep's result
+  cue: { title: string; hint: string }
+  history: Verdict['kind'][]
+  streak: number // good reps in a row
+  good: number
+  fixes: number
+  seq: number // bumps on each new rep result (for one-shot animations)
+}
+
+export function useEarthDemo() {
+  const q = new URLSearchParams(location.search) // review shortcut: ?step=N jumps there, &hold=1 freezes it
+  const [i, setI] = useState(() => Math.min(STEPS.length - 1, Number(q.get('step')) || 0))
+  const [paused, setPaused] = useState(() => q.get('hold') === '1')
+  const [voice, setVoice] = useState(false)
+  const [big, setBig] = useState(false)
+  const step = STEPS[i]
+
+  useEffect(() => {
+    if (paused || step.ms === Infinity) return
+    const id = setTimeout(() => setI((n) => n + 1), step.ms)
+    return () => clearTimeout(id)
+  }, [i, paused, step.ms])
+  useEffect(() => { document.documentElement.toggleAttribute('data-big-text', big); return () => document.documentElement.removeAttribute('data-big-text') }, [big])
+
+  const verdict = step.rep > 0 ? VERDICTS[step.rep - 1] : null
+  const history = VERDICTS.slice(0, step.rep).map((v) => v.kind)
+  let streak = 0
+  for (let k = history.length - 1; k >= 0 && history[k] === 'good'; k--) streak++
+
+  const cue = step.phase === 'away' ? { title: 'Step into view', hint: 'Your whole body should fit on the screen.' }
+    : step.phase === 'done' ? { title: 'Set done!', hint: `${history.filter((h) => h === 'good').length} reps just like your normal.` }
+    : step.phase === 'ready' || !verdict ? { title: 'Start moving', hint: startHint(PROFILE) }
+    : cueFor(verdict, PROFILE)
+
+  const spokenFor = useRef(-1)
+  useEffect(() => {
+    if (!voice || paused) return
+    if ((step.phase === 'result' || step.phase === 'done' || step.phase === 'ready') && spokenFor.current !== i) { spokenFor.current = i; speak(cue.title) }
+  }, [i, voice, paused, step.phase, cue.title])
+
+  const state: DemoState = {
+    phase: step.phase, paused, activity: step.activity, label: activityLabel(step.activity, false), rep: step.rep, verdict, cue, history, streak,
+    good: history.filter((h) => h === 'good').length, fixes: history.filter((h) => h === 'fix').length, seq: step.rep,
+  }
+  return {
+    s: state,
+    toggle: () => { if (step.phase === 'done') { setI(0); setPaused(false) } else { setPaused((p) => !p); stopSpeaking() } },
+    restart: () => { setI(0); setPaused(false) },
+    voice, setVoice, big, setBig,
+  }
+}
+
+export type Demo = ReturnType<typeof useEarthDemo>
+
+// Camera stand-in: the drawn person; `arrow` shows the knee-out arrow on the body.
+export function Backdrop({ arrow = false }: { arrow?: boolean }) {
+  return <SimulatedCamera theme="earth" height={844} figureHeight={640} arrow={arrow} />
+}
+
+// Shared settings sheet: voice and bigger text really work; restart replays the set.
+export function SettingsSheet({ d, open, onClose }: { d: Demo; open: boolean; onClose: () => void }) {
+  return (
+    <div className="pe-sheet" data-open={open || undefined} inert={!open} role="dialog" aria-modal="true" aria-label="Settings">
+      <button type="button" className="pe-scrim" aria-label="Close settings" onClick={onClose} />
+      <div className="pe-sheet-body">
+        <h2>Settings</h2>
+        <button type="button" role="switch" aria-checked={d.voice} className="pe-row" onClick={() => d.setVoice(!d.voice)}>Speak the tips<span className="pe-switch" data-on={d.voice || undefined} /></button>
+        <button type="button" role="switch" aria-checked={d.big} className="pe-row" onClick={() => d.setBig(!d.big)}>Bigger text<span className="pe-switch" data-on={d.big || undefined} /></button>
+        <button type="button" className="pe-row" onClick={() => { d.restart(); onClose() }}>Replay the demo set<span aria-hidden="true">↺</span></button>
+        <button type="button" className="pe-chunky" onClick={onClose}>Done</button>
+      </div>
+    </div>
+  )
+}
+
+export function Gear({ onClick, className = '' }: { onClick: () => void; className?: string }) {
+  return (
+    <button type="button" className={`pe-gear ${className}`} aria-label="Settings" onClick={onClick}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+    </button>
+  )
+}
