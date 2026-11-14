@@ -9,10 +9,15 @@ import styles from './SimulatedCamera.module.css'
 // Earth: a drawn person mid-squat, right knee drifting inward.
 type Pose = Partial<Record<Joint, [x: number, y: number]>>
 const PHOTO_LANDMARKS: [x: number, y: number, visibility: number][] = [[265,243,1],[287,199,1],[301,198,1],[317,198,1],[265,202,1],[261,201,1],[257,200,1],[381,209,1],[281,209,1],[297,276,1],[270,276,1],[551,359,1],[301,381,1],[749,557,1],[314,459,.75],[793,380,1],[244,343,.93],[809,313,1],[219,320,.9],[772,296,1],[231,318,.9],[751,325,1],[237,324,.89],[600,721,1],[451,717,1],[454,832,1],[159,715,.99],[522,1212,1],[212,1028,.99],[571,1276,1],[259,1083,.99],[429,1379,1],[67,1141,.99]]
+// Face points (0–10) are left out: in a three-quarter view MediaPipe guesses them. MediaPipe has no neck, so (as in
+// OpenPose) neck = mid-shoulders and head = mid-ears, joined by one bone.
+const SHOWN = PHOTO_LANDMARKS.map((_, i) => i > 10)
+const mid = (a: number, b: number): [number, number] => [(PHOTO_LANDMARKS[a][0] + PHOTO_LANDMARKS[b][0]) / 2, (PHOTO_LANDMARKS[a][1] + PHOTO_LANDMARKS[b][1]) / 2]
+const HEAD = mid(7, 8), NECK = mid(11, 12)
 const PHOTO = {
   href: '/ared-squat.jpg', w: 1103, h: 1440, credit: 'NASA · S133-E-008323',
   // for tags and the ruler
-  joints: Object.fromEntries(Object.entries({ head: 0, ls: 11, rs: 12, lh: 23, rh: 24, lk: 25, rk: 26, la: 27, ra: 28 }).map(([j, i]) => [j, PHOTO_LANDMARKS[i].slice(0, 2)])) as Pose,
+  joints: { head: HEAD, neck: NECK, ...Object.fromEntries(Object.entries({ ls: 11, rs: 12, lh: 23, rh: 24, lk: 25, rk: 26, la: 27, ra: 28 }).map(([j, i]) => [j, PHOTO_LANDMARKS[i].slice(0, 2)])) } as Pose,
 }
 const JOINTS: Record<Joint, [x: number, y: number]> = {
   head: [180, 118], neck: [180, 150], ls: [142, 170], rs: [218, 170], le: [124, 226], re: [236, 226],
@@ -80,11 +85,13 @@ export default function SimulatedCamera({ theme, width = 360, height, figureHeig
 
         {photo ? (
           <g className={styles.skeleton}>
-            {PoseLandmarker.POSE_CONNECTIONS.map(({ start, end }) => {
+            {PoseLandmarker.POSE_CONNECTIONS.filter(({ start, end }) => SHOWN[start] && SHOWN[end]).map(({ start, end }) => {
               const [a, b] = [PHOTO_LANDMARKS[start], PHOTO_LANDMARKS[end]]
               return <line key={`${start}-${end}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeWidth={1.5 * k} strokeLinecap="round" opacity={Math.min(a[2], b[2]) < .5 ? .3 : 1} />
             })}
-            {PHOTO_LANDMARKS.map(([x, y, v], i) => <circle key={i} cx={x} cy={y} r={2.4 * k} opacity={v < .5 ? .3 : 1} />)}
+            <line x1={NECK[0]} y1={NECK[1]} x2={HEAD[0]} y2={HEAD[1]} strokeWidth={1.5 * k} strokeLinecap="round" />
+            {PHOTO_LANDMARKS.map(([x, y, v], i) => SHOWN[i] && <circle key={i} cx={x} cy={y} r={2.4 * k} opacity={v < .5 ? .3 : 1} />)}
+            {[NECK, HEAD].map(([x, y]) => <circle key={`${x},${y}`} cx={x} cy={y} r={2.4 * k} />)}
           </g>
         ) : (
           <g className={styles.skeleton}>
