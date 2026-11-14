@@ -90,6 +90,7 @@
   --text-xl: 96px;
 }
 /* Earth "Bigger text" (Settings / About you). */
+[data-theme="earth"]:lang(uk) { --font-body: var(--font-sans); } /* Atkinson has no Cyrillic */
 [data-theme="earth"][data-big-text] { --text-md: 22px; --text-lg: 38px; --text-xl: 120px; }
 
 * { box-sizing: border-box; margin: 0; }

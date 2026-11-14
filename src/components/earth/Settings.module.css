@@ -7,7 +7,7 @@
 .list > * + * { border-top: 2px solid var(--rule); }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 60px; padding: 10px 18px; font-size: var(--text-md); text-align: left; }
 .row small { display: block; font-size: calc(var(--text-md) * .85); color: var(--muted); }
-.row:active { background: var(--rule); }
+button.row:active { background: var(--rule); } /* not the Language row: pressing its switch shouldn't flash the row */
 .switch { flex: none; position: relative; width: 52px; height: 32px; border-radius: var(--r-tag); background: var(--rule); transition: background-color 150ms ease-out; }
 .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: calc(var(--r-tag) - 2px); background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform 150ms ease-out; }
 .switch[data-on] { background: var(--good); }

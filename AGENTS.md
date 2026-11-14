@@ -100,6 +100,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Space sounds = the same Theia chimes** on live reps (baseline at rep 3, on target, adjust, every 5 on target in a row), with a Sounds tick in the View menu.
 - **Earth sounds = Theia chimes** (`capture/chimes.ts`): our own synthesized marimba-like tones, 'juicy' style (mallet click, warm body, bell sparkle, short room). On target, adjust, baseline learned (rep 3), 5 on target in a row, set complete; silent while learning. Quiet (50%), before the spoken tip, own on/off switch in Settings.
 - **No restricted third-party media.** Space Apps terms: non-NASA material must be free *without restriction* or OSI-licensed, and every source cited. So no CC-BY (e.g. Google Material sounds were rejected for this), no CC-BY-SA; CC0, public domain, NASA material or our own work only.
+- **Earth languages:** English and Ukrainian. Every Earth string lives in `src/earthText.ts` (formal «ви», gender-neutral); the engine's text functions take a `lang`. EN/УКР switch on the first About-you screen and in Settings; the first visit follows the phone's language; stored apart from About you. Atkinson has no Cyrillic, so Ukrainian uses IBM Plex Sans (`:lang(uk)` in tokens.css); spoken tips use a `uk-UA` voice.
 - **Earth palette:** Linen & Pine (OKLCH, one warm neutral hue), green = on target, amber = adjust, always with ✓ / ! / words. Corner scale 0.5 (frame 10 / card 8 / tag 5), lip 4px, counts in IBM Plex (Atkinson's zero is slashed).
 - **Rejected for Earth:** Coach (demonstrator figure too small), Signal (least information), Log (busiest), Captions (passive with voice off); a sun mascot (childish); glass pills over the video; Wheat & Sky / Workshop / Clay / Evening palettes (kept in the lab). Note: green vs amber is the weaker pair for red-green colour blindness; Wheat & Sky (blue vs amber) is the safer swap if that becomes a problem.
 
@@ -138,6 +139,7 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `CoachBar` | `results[]`, `total`, `paused`, `onPause`, `onSettings` | Pause/resume, one segment per rep coloured by result, count in Plex, settings |
 | `NoteCard` | `kind`, `title`, `line` | The one instruction; tinted by result (`good`/`fix`/`done`), words carry the meaning |
 | `ChunkyButton` | `onClick`, `tone?`, `disabled?`, children | Full-width primary action with the solid lip; one per screen |
+| `LangSwitch` | `lang`, `label`, `onChange` | EN / УКР segmented switch; each button named in its own language |
 | `Icon` | `name`, `size` | Earth's single icon set (2.2 stroke, round). No emoji |
 | `AboutYou` | `initial?`, `onDone`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing, voice, bigger text |
 | `PlacePhone` | `camera`, `seen`, `error`, `onRetry`, `onDone` | Optional setup: hip height, 2–3 steps; frame turns green with "I can see you" |

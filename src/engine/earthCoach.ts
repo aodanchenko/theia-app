@@ -1,5 +1,6 @@
 // Earth coaching: turns rep scores into one plain-language instruction, using the person's "About you" answers.
 // Plain TS, runs in Node.
+import { TEXT, type Lang } from '../earthText.ts'
 import type { EarthProfile } from '../types.ts'
 import { meanFeatures, scoreRep, type FeatureKey, type RepFeatures, type SquatModel } from './squat.ts'
 
@@ -16,22 +17,23 @@ export function judgeLastRep(reps: RepFeatures[], model: SquatModel, threshold: 
 const sideWord = (p: EarthProfile) => (p.side === 'left' || p.side === 'right' ? p.side : null)
 
 // One short instruction + a hint, spoken as-is when voice is on.
-export function cueFor(v: Verdict, p: EarthProfile): { title: string; hint: string } {
-  const side = sideWord(p)
-  if (v.kind === 'learning') return { title: 'Keep going', hint: `Learning your normal · ${v.done} of ${CALIBRATION}` }
-  if (v.kind === 'good') return { title: 'Good rep', hint: 'Just like your normal' }
+export function cueFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { title: string; hint: string } {
+  const t = TEXT[lang], side = sideWord(p)
+  if (v.kind === 'learning') return { title: t.keepGoing, hint: t.learning(v.done, CALIBRATION) }
+  if (v.kind === 'good') return { title: t.goodRep, hint: t.likeNormal }
   return {
-    depth: { title: p.position === 'seated' ? 'Lower more slowly' : 'Bend a little deeper', hint: 'Only as far as feels steady' },
-    kneeWidth: { title: side ? `Push your ${side} knee out` : 'Push your knees out', hint: 'Knees over your toes' },
-    trunkLean: { title: 'Keep your chest up', hint: 'Look straight ahead' },
-    asymmetry: { title: side ? `Use your ${side} leg too` : 'Use both legs evenly', hint: 'Share the weight' },
+    depth: { title: p.position === 'seated' ? t.slower : t.deeper, hint: t.steady },
+    kneeWidth: { title: t.kneeOut(side), hint: t.kneesOverToes },
+    trunkLean: { title: t.chestUp, hint: t.lookAhead },
+    asymmetry: { title: t.useLeg(side), hint: t.shareWeight },
   }[v.feature]
 }
 
 // The first instruction on the camera screen, before any movement.
-export function startHint(p: EarthProfile): string {
-  const move = p.position === 'seated' ? 'Sit tall, then stand up and sit down slowly.' : 'Stand tall, then bend your knees and come up slowly.'
-  const support = p.aid ? ' Keep your support within reach.' : p.prosthesis ? ' Go only as deep as feels steady.' : ''
+export function startHint(p: EarthProfile, lang: Lang = 'en'): string {
+  const t = TEXT[lang]
+  const move = p.position === 'seated' ? t.startSeated : t.startStanding
+  const support = p.aid ? t.keepSupport : p.prosthesis ? t.onlySteady : ''
   return move + support
 }
 
@@ -62,24 +64,26 @@ export function repResults(reps: RepFeatures[], model: SquatModel, threshold: nu
 }
 
 // The note under the camera after a rep, in an instructor's plain words.
-export function noteFor(v: Verdict, rep: number, p: EarthProfile): { kind: NoteKind; title: string; line: string } {
-  if (v.kind === 'learning') return { kind: 'learn', title: `Rep ${rep} · Learning your normal`, line: `${v.done} of ${CALIBRATION}. Move the way you usually do.` }
-  if (v.kind === 'good') return { kind: 'good', title: `Rep ${rep} · On target`, line: 'Same as your normal.' }
-  const c = cueFor(v, p)
-  return { kind: 'fix', title: c.title, line: `Rep ${rep} · ${c.hint}.` }
+export function noteFor(v: Verdict, rep: number, p: EarthProfile, lang: Lang = 'en'): { kind: NoteKind; title: string; line: string } {
+  const t = TEXT[lang]
+  if (v.kind === 'learning') return { kind: 'learn', title: `${t.rep(rep)} · ${t.learningNormal}`, line: t.learningLine(v.done, CALIBRATION) }
+  if (v.kind === 'good') return { kind: 'good', title: `${t.rep(rep)} · ${t.onTarget}`, line: t.sameAsNormal }
+  const c = cueFor(v, p, lang)
+  return { kind: 'fix', title: c.title, line: `${t.rep(rep)} · ${c.hint}.` }
 }
 
 // Where a mark goes on the body (MediaPipe landmark indices, averaged) and what it says.
 // Arrows are for the mirrored selfie view: the person's right is on the screen's right.
-export function markFor(v: Verdict, p: EarthProfile): { joints: number[]; label: string; arrow: 'left' | 'right' | 'up' | 'down' | null }[] {
-  if (v.kind === 'good') return [{ joints: [23, 24], label: 'On target', arrow: null }]
+export function markFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { joints: number[]; label: string; arrow: 'left' | 'right' | 'up' | 'down' | null }[] {
+  const t = TEXT[lang]
+  if (v.kind === 'good') return [{ joints: [23, 24], label: t.onTarget, arrow: null }]
   if (v.kind !== 'fix') return []
-  const knee = (side: 'left' | 'right') => ({ joints: [side === 'left' ? 25 : 26], label: 'Knee out', arrow: side === 'left' ? 'left' as const : 'right' as const })
+  const knee = (side: 'left' | 'right') => ({ joints: [side === 'left' ? 25 : 26], label: t.markKnee, arrow: side === 'left' ? 'left' as const : 'right' as const })
   const sides = p.side === 'left' || p.side === 'right' ? [p.side] : (['left', 'right'] as const)
   return {
     kneeWidth: sides.map(knee),
-    trunkLean: [{ joints: [11, 12], label: 'Chest up', arrow: 'up' as const }],
-    depth: [{ joints: [23, 24], label: p.position === 'seated' ? 'Slower' : 'Lower', arrow: 'down' as const }],
-    asymmetry: sides.map((side) => ({ joints: [side === 'left' ? 25 : 26], label: `Use this leg`, arrow: null })),
+    trunkLean: [{ joints: [11, 12], label: t.markChest, arrow: 'up' as const }],
+    depth: [{ joints: [23, 24], label: p.position === 'seated' ? t.markSlower : t.markLower, arrow: 'down' as const }],
+    asymmetry: sides.map((side) => ({ joints: [side === 'left' ? 25 : 26], label: t.markLeg, arrow: null })),
   }[v.feature]
 }

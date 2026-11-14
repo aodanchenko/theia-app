@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision'
 import useCameraStream from '../capture/useCameraStream.ts'
 import { playChime } from '../capture/chimes.ts'
@@ -16,7 +16,8 @@ import { activityLabel, createActivityTracker, type Activity } from '../engine/a
 import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
 import { createRepDetector, fromMediaPipe, MEDIAPIPE_NOISE, MEDIAPIPE_UP, withNoise, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
-import { clearProfile, loadProfile, saveProfile } from '../store.ts'
+import { TEXT, type Lang } from '../earthText.ts'
+import { clearProfile, loadLang, loadProfile, saveLang, saveProfile } from '../store.ts'
 import type { EarthProfile } from '../types.ts'
 
 const MODEL = withNoise(REHAB_MODEL, MEDIAPIPE_NOISE)
@@ -30,6 +31,10 @@ export default function EarthPage() {
   const [screen, setScreen] = useState<Screen>(profile ? 'live' : 'about')
   const [editing, setEditing] = useState(false) // About you opened from Settings
   const camera = useCameraStream()
+  const [lang, setLang] = useState<Lang>(loadLang)
+  const t = TEXT[lang]
+  const changeLang = (l: Lang) => { saveLang(l); setLang(l); stopSpeaking() }
+  useLayoutEffect(() => { document.documentElement.lang = lang; return () => { document.documentElement.lang = 'en' } }, [lang]) // before paint: screen readers, hyphenation, and the Cyrillic font without a flash of Atkinson
 
   const save = (p: EarthProfile) => { saveProfile(p); setProfile(p) }
   useEffect(() => { document.documentElement.toggleAttribute('data-big-text', !!profile?.bigText) }, [profile?.bigText])
@@ -74,17 +79,17 @@ export default function EarthPage() {
   const results: NoteKind[] = repResults(reps, MODEL, THRESHOLD)
   const good = results.filter((r) => r === 'good').length
   const note: { kind: NoteKind; title: string; line: string } =
-    camera.error ? { kind: 'idle', title: 'Camera is off', line: camera.error }
-    : camera.status !== 'on' ? { kind: 'idle', title: 'Starting the camera…', line: 'Allow the camera when your phone asks.' }
-    : done ? { kind: 'done', title: 'Set complete', line: `${good} of ${SET_REPS} reps on target.` }
-    : !running ? { kind: 'idle', title: 'Paused', line: 'Tap Resume when you are ready.' }
-    : activity === 'away' ? { kind: 'idle', title: 'Step into the frame', line: 'Whole body visible, 2–3 steps back.' }
-    : verdict && profile ? noteFor(verdict, reps.length, profile)
-    : { kind: 'idle', title: 'Start when ready', line: profile ? startHint(profile) : '' }
+    camera.error ? { kind: 'idle', title: t.cameraOff, line: t.cameraErrors[camera.errorCode ?? ''] ?? t.cameraErrors.other }
+    : camera.status !== 'on' ? { kind: 'idle', title: t.starting, line: t.allowCamera }
+    : done ? { kind: 'done', title: t.setDone, line: t.setSummary(good, SET_REPS) }
+    : !running ? { kind: 'idle', title: t.paused, line: t.pausedLine }
+    : activity === 'away' ? { kind: 'idle', title: t.stepIn, line: t.stepInLine }
+    : verdict && profile ? noteFor(verdict, reps.length, profile, lang)
+    : { kind: 'idle', title: t.startWhenReady, line: profile ? startHint(profile, lang) : '' }
 
   // Marks on the body for the last rep, while you stand between reps.
   const marks: BodyMark[] = verdict && profile && repPose && activity === 'standing' && running && !done
-    ? markFor(verdict, profile).map((m) => {
+    ? markFor(verdict, profile, lang).map((m) => {
         const pts = m.joints.map((j) => repPose[j]).filter(Boolean)
         return { x: pts.reduce((a, p) => a + p.x, 0) / pts.length, y: pts.reduce((a, p) => a + p.y, 0) / pts.length, label: m.label, arrow: m.arrow, kind: verdict.kind === 'good' ? 'good' as const : 'fix' as const }
       }).filter((m) => !Number.isNaN(m.x))
@@ -98,13 +103,15 @@ export default function EarthPage() {
     if (reps.length === announced.current) return
     announced.current = reps.length
     if (sound) playChime(sound)
-    if (say) setTimeout(() => speak(say), sound ? 450 : 0) // let the sound finish before the voice; not cancelled if the note changes meanwhile
-  }, [reps.length, sound, say])
+    if (say) setTimeout(() => speak(say, t.speech), sound ? 450 : 0) // let the sound finish before the voice; not cancelled if the note changes meanwhile
+  }, [reps.length, sound, say, t.speech])
 
   let content
   if (screen === 'about' || !profile) {
     content = (
       <AboutYou
+        lang={lang}
+        onLang={changeLang}
         initial={editing ? profile : null}
         onCancel={editing ? () => { setEditing(false); setScreen('settings') } : undefined}
         onDone={(p) => { save(p); setScreen(editing ? 'settings' : 'place'); setEditing(false) }}
@@ -113,6 +120,9 @@ export default function EarthPage() {
   } else if (screen === 'settings') {
     content = (
       <Settings
+        t={t}
+        lang={lang}
+        onLang={changeLang}
         profile={profile}
         onChange={save}
         onEditAbout={() => { setEditing(true); setScreen('about') }}
@@ -123,16 +133,16 @@ export default function EarthPage() {
     )
   } else {
     content = screen === 'place'
-      ? <PlacePhone camera={<EarthCamera stream={camera.stream} onPose={onPose} />} seen={seen} error={camera.error} onRetry={() => void start()} onDone={() => setScreen('live')} />
+      ? <PlacePhone t={t} camera={<EarthCamera stream={camera.stream} onPose={onPose} />} seen={seen} error={camera.error} onRetry={() => void start()} onDone={() => setScreen('live')} />
       : (
         <CoachScreen
-          bar={<CoachBar results={results} total={SET_REPS} paused={!running} onPause={toggle} onSettings={() => setScreen('settings')} />}
-          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position === 'seated') : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
+          bar={<CoachBar t={t} results={results} total={SET_REPS} paused={!running} onPause={toggle} onSettings={() => setScreen('settings')} />}
+          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position === 'seated', lang) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
           note={<NoteCard kind={note.kind} title={note.title} line={note.line} />}
-          action={<ChunkyButton tone={done ? 'good' : undefined} onClick={toggle}>{camera.error ? 'Try again' : done ? 'Start another set' : running ? 'Pause' : 'Resume'}</ChunkyButton>}
+          action={<ChunkyButton tone={done ? 'good' : undefined} onClick={toggle}>{camera.error ? t.tryAgain : done ? t.anotherSet : running ? t.pause : t.resume}</ChunkyButton>}
         />
       )
   }
 
-  return <DeviceFrame>{content}</DeviceFrame>
+  return <DeviceFrame t={t}>{content}</DeviceFrame>
 }

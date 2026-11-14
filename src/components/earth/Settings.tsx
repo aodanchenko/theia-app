@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
+import type { EarthText, Lang } from '../../earthText.ts'
 import type { EarthProfile } from '../../types.ts'
+import LangSwitch from './LangSwitch.tsx'
 import styles from './Settings.module.css'
 
-const SIDE = { left: 'Left', right: 'Right', both: 'Both', unsure: 'Not sure' }
-
-// Settings: About you, voice, text size, phone placement, help, about, start over.
-export default function Settings({ profile, onChange, onEditAbout, onPlace, onReset, onClose }: {
+// Settings: About you, language, voice, text size, phone placement, help, about, start over.
+export default function Settings({ t, lang, onLang, profile, onChange, onEditAbout, onPlace, onReset, onClose }: {
+  t: EarthText
+  lang: Lang
+  onLang: (l: Lang) => void
   profile: EarthProfile
   onChange: (p: EarthProfile) => void
   onEditAbout: () => void
@@ -13,37 +16,38 @@ export default function Settings({ profile, onChange, onEditAbout, onPlace, onRe
   onReset: () => void
   onClose: () => void
 }) {
-  const summary = [`${SIDE[profile.side]} side`, profile.position === 'seated' ? 'seated' : 'standing', profile.prosthesis && 'prosthesis', profile.aid && 'walking aid'].filter(Boolean).join(' · ')
+  const summary = [t.sideSummary[profile.side], profile.position === 'seated' ? t.seated : t.standing, profile.prosthesis && t.prosthesis, profile.aid && t.walkingAid].filter(Boolean).join(' · ')
   return (
     <div className={styles.screen}>
       <header className={styles.bar}>
-        <h1>Settings</h1>
-        <button type="button" className={styles.done} onClick={onClose}>Done</button>
+        <h1>{t.settings}</h1>
+        <button type="button" className={styles.done} onClick={onClose}>{t.done}</button>
       </header>
 
-      <Group title="You">
-        <Row label="About you" detail={summary} onClick={onEditAbout} />
-        <Toggle label="Sounds" on={profile.sounds !== false} onChange={(sounds) => onChange({ ...profile, sounds })} />
-        <Toggle label="Speak the tips" on={profile.voice} onChange={(voice) => onChange({ ...profile, voice })} />
-        <Toggle label="Bigger text" on={profile.bigText} onChange={(bigText) => onChange({ ...profile, bigText })} />
+      <Group title={t.you}>
+        <Row label={t.aboutYou} detail={summary} onClick={onEditAbout} />
+        <div className={styles.row}><b>{t.language}</b><LangSwitch lang={lang} label={t.language} onChange={onLang} /></div>
+        <Toggle label={t.sounds} on={profile.sounds !== false} onChange={(sounds) => onChange({ ...profile, sounds })} />
+        <Toggle label={t.speakTips} on={profile.voice} onChange={(voice) => onChange({ ...profile, voice })} />
+        <Toggle label={t.biggerText} on={profile.bigText} onChange={(bigText) => onChange({ ...profile, bigText })} />
       </Group>
 
-      <Group title="Help">
-        <Row label="How to place the phone" onClick={onPlace} />
+      <Group title={t.help}>
+        <Row label={t.howToPlace} onClick={onPlace} />
         <details className={styles.more}>
-          <summary>Get help</summary>
-          <p>Feel pain, dizziness or chest pain? <b>Stop and sit down.</b> Then call your physiotherapist or doctor.</p>
-          <p>In an emergency, call <a href="tel:112">112</a>.</p>
-          <p>Theia gives movement tips, not medical advice or a diagnosis.</p>
+          <summary>{t.getHelp}</summary>
+          <p>{t.helpPain[0]}<b>{t.helpPain[1]}</b>{t.helpPain[2]}</p>
+          <p>{t.help112[0]}<a href="tel:112">112</a>{t.help112[1]}</p>
+          <p>{t.notAdvice}</p>
         </details>
         <details className={styles.more}>
-          <summary>About Theia</summary>
-          <p>Theia watches your movement through the camera, learns your normal from your first reps, and gives one tip at a time.</p>
-          <p>Camera video never leaves this phone. Your answers are saved only on this phone.</p>
+          <summary>{t.aboutTheia}</summary>
+          <p>{t.aboutHow}</p>
+          <p>{t.aboutPrivacy}</p>
         </details>
       </Group>
 
-      <button type="button" className={styles.reset} onClick={onReset}>Start over</button>
+      <button type="button" className={styles.reset} onClick={onReset}>{t.startOver}</button>
     </div>
   )
 }

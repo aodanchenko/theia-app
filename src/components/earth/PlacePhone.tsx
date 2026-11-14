@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
+import type { EarthText } from '../../earthText.ts'
 import styles from './PlacePhone.module.css'
 
 // Optional setup: how to place the phone, with the live camera below. The frame turns green once hips and knees are seen.
-export default function PlacePhone({ camera, seen, error, onRetry, onDone }: { camera: ReactNode; seen: boolean; error: string | null; onRetry: () => void; onDone: () => void }) {
+export default function PlacePhone({ t, camera, seen, error, onRetry, onDone }: { t: EarthText; camera: ReactNode; seen: boolean; error: string | null; onRetry: () => void; onDone: () => void }) {
   return (
     <div className={styles.screen}>
-      <h1 className={styles.title}>Place your phone</h1>
+      <h1 className={styles.title}>{t.placeTitle}</h1>
       <div className={styles.how}>
         <svg viewBox="0 0 200 110" className={styles.art} aria-hidden="true">
           <line x1="6" y1="100" x2="194" y2="100" className={styles.floor} />
@@ -18,18 +19,18 @@ export default function PlacePhone({ camera, seen, error, onRetry, onDone }: { c
           {/* hip height + distance */}
           <line x1="42" y1="62" x2="160" y2="62" className={styles.guide} />
           <path d="M48 82 H150 M48 78 V86 M150 78 V86" className={styles.measure} />
-          <text x="99" y="78" textAnchor="middle" className={styles.label}>2–3 steps</text>
+          <text x="99" y="78" textAnchor="middle" className={styles.label}>{t.steps}</text>
         </svg>
-        <p>At <b>hip height</b>, <b>2–3 steps</b> away, so your whole body fits on the screen.</p>
+        <p>{t.place[0]}<b>{t.place[1]}</b>{t.place[2]}<b>{t.place[3]}</b>{t.place[4]}</p>
       </div>
       <div className={styles.preview} data-seen={seen || undefined}>
         {camera}
         {error
-          ? <button type="button" className={styles.badge} onClick={onRetry}>Camera is off · Try again</button>
-          : <span className={styles.badge} role="status">{seen ? '✓ I can see you' : 'Looking for you…'}</span>}
+          ? <button type="button" className={styles.badge} onClick={onRetry}>{t.cameraOffRetry}</button>
+          : <span className={styles.badge} role="status">{seen ? t.seeYou : t.looking}</span>}
         {error && <p className={styles.error}>{error}</p>}
       </div>
-      <button type="button" className={styles.go} data-ready={seen || undefined} onClick={onDone}>{seen ? 'Start' : 'Skip for now'}</button>
+      <button type="button" className={styles.go} data-ready={seen || undefined} onClick={onDone}>{seen ? t.start : t.skip}</button>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 // All saving and loading goes through this file, so a backend can replace browser storage here only.
+import { defaultLang, type Lang } from './earthText.ts'
 import type { EarthProfile } from './types.ts'
 const KEY = 'theia.sessions'
 
@@ -33,4 +34,19 @@ export function saveProfile(p: EarthProfile) {
 
 export function clearProfile() {
   try { localStorage.removeItem(PROFILE) } catch { /* nothing stored */ }
+}
+
+// Earth language: kept apart from "About you" so it can be picked before the first question and survives Start over.
+const LANG = 'theia.earth.lang'
+
+export function loadLang(): Lang {
+  try {
+    const l = localStorage.getItem(LANG)
+    if (l === 'en' || l === 'uk') return l
+  } catch { /* not readable: fall back to the phone's language */ }
+  return defaultLang(navigator.languages ?? [navigator.language])
+}
+
+export function saveLang(l: Lang) {
+  try { localStorage.setItem(LANG, l) } catch { /* not saved: picked again next visit */ }
 }

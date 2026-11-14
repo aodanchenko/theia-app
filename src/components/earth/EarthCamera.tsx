@@ -34,7 +34,7 @@ export default function EarthCamera({ stream, onPose, label, away, marks = [] }:
     const s = Math.max(box.cw / box.vw, box.ch / box.vh)
     const x = box.cw - ((box.cw - box.vw * s) / 2 + m.x * box.vw * s)
     const y = (box.ch - box.vh * s) / 2 + m.y * box.vh * s
-    return { left: `${Math.min(80, Math.max(4, (x / box.cw) * 100))}%`, top: `${Math.min(88, Math.max(4, (y / box.ch) * 100))}%` }
+    return { left: `${Math.min(76, Math.max(24, (x / box.cw) * 100))}%`, top: `${Math.min(90, Math.max(10, (y / box.ch) * 100))}%` } // marks are centred and up to 44% wide: keep them inside the frame
   }
 
   return (

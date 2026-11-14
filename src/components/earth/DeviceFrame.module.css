@@ -2,8 +2,8 @@
 .device { position: relative; height: 100%; }
 .caption, .rotate { display: none; }
 
-/* Laptop / desktop: a phone frame in the middle of the screen. */
-@media (hover: hover) and (pointer: fine) {
+/* Laptop / desktop (mouse and a wide window): a phone frame in the middle of the screen. A phone-width window gets the bare app. */
+@media (hover: hover) and (pointer: fine) and (min-width: 600px) and (min-height: 600px) {
   .stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; gap: 16px; padding: 24px; background: color-mix(in srgb, var(--bg) 90%, var(--ink)); }
   .device {
     align-self: center; height: min(844px, 100%); aspect-ratio: 390 / 844;

@@ -37,3 +37,12 @@ test('earthCoach: sounds — quiet while learning, baseline at rep 3, streak eve
   assert.equal(soundFor(['learn', 'learn', 'learn', 'good', 'good', 'good', 'good', 'good']), 'streak')
   assert.equal(soundFor(Array(10).fill('good')), 'done')
 })
+
+test('Ukrainian: same logic, Ukrainian words and the right grammatical side', () => {
+  const v = { kind: 'fix', feature: 'kneeWidth' } as const
+  assert.equal(cueFor(v, P, 'uk').title, 'Відведіть праве коліно назовні')
+  assert.equal(cueFor({ kind: 'fix', feature: 'asymmetry' }, { ...P, side: 'left' }, 'uk').title, 'Навантажуйте й ліву ногу')
+  assert.equal(noteFor({ kind: 'good' }, 4, P, 'uk').title, 'Повтор 4 · Правильно')
+  assert.deepEqual(markFor(v, P, 'uk'), [{ joints: [26], label: 'Коліно назовні', arrow: 'right' }])
+  assert.match(startHint(P, 'uk'), /^Станьте рівно.*опору під рукою/)
+})

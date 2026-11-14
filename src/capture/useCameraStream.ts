@@ -11,6 +11,7 @@ export default function useCameraStream() {
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [status, setStatus] = useState<'off' | 'starting' | 'on'>('off')
   const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null) // DOMException name, so a page can word the error itself
   const current = useRef<MediaStream | null>(null)
   const mounted = useRef(true)
 
@@ -22,9 +23,10 @@ export default function useCameraStream() {
   }, [])
 
   const start = useCallback(async () => {
-    if (!navigator.mediaDevices) return setError('The camera needs HTTPS or localhost.')
+    if (!navigator.mediaDevices) { setErrorCode('insecure'); return setError('The camera needs HTTPS or localhost.') }
     setStatus('starting')
     setError(null)
+    setErrorCode(null)
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280, height: 720 }, audio: false })
       if (!mounted.current) return s.getTracks().forEach((t) => t.stop()) // unmounted while asking
@@ -34,6 +36,7 @@ export default function useCameraStream() {
     } catch (e) {
       const { name, message } = e as Error
       setStatus('off')
+      setErrorCode(name)
       setError(ERRORS[name] ?? `Could not start the camera: ${message}`)
     }
   }, [])
@@ -43,5 +46,5 @@ export default function useCameraStream() {
     return () => { mounted.current = false; stop() }
   }, [stop])
 
-  return { stream, status, error, start, stop }
+  return { stream, status, error, errorCode, start, stop }
 }
