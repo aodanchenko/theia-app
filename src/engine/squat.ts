@@ -26,10 +26,27 @@ export const FEATURES: FeatureKey[] = ['depth', 'kneeWidth', 'trunkLean', 'asymm
 const BAD: Record<FeatureKey, 1 | -1> = { depth: -1, kneeWidth: -1, trunkLean: 1, asymmetry: 1 }
 
 export const LABELS: Record<FeatureKey, string> = {
-  depth: 'Depth (knee flexion)',
+  depth: 'Knee bend (0° = straight)',
   kneeWidth: 'Knee/ankle width',
   trunkLean: 'Trunk lean',
   asymmetry: 'L/R asymmetry',
+}
+
+// Correct deep squat, in the units of RepFeatures: thighs at least parallel (knee flexion ≥ 90°), knees no narrower
+// than the feet, trunk ≤ 45° from vertical (textbook), left–right gap ≤ 7° (97.5th percentile of UI-PRMD correct reps).
+// Too strict to alarm on (it flags ~30% of a new person's correct reps), so it sets the target and an amber nudge;
+// red flags stay on the personal baseline. shortcut: absolute angles from MediaPipe are not validated against these.
+export const FORM_LIMITS: Record<FeatureKey, number> = { depth: 90, kneeWidth: 1, trunkLean: 45, asymmetry: 7 }
+
+// How far past its correct-form limit a value is, relative to the limit (≤ 0 = correct).
+export const pastForm = (k: FeatureKey, v: number) => BAD[k] * (v - FORM_LIMITS[k]) / Math.max(FORM_LIMITS[k], 1)
+export const formLimitText = (k: FeatureKey) => `${BAD[k] < 0 ? '≥' : '≤'} ${k === 'kneeWidth' ? FORM_LIMITS[k].toFixed(2) : `${FORM_LIMITS[k]}°`}`
+
+// The measure furthest past its correct-form limit, or null when the rep is correct.
+export function formMiss(f: RepFeatures): FeatureKey | null {
+  let worst: FeatureKey | null = null, most = 0
+  for (const k of FEATURES) if (pastForm(k, f[k]) > most) { most = pastForm(k, f[k]); worst = k }
+  return worst
 }
 
 // What went wrong, in a word or two (chart flags).

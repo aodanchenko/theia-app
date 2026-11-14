@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createRepDetector, MEDIAPIPE_NOISE, repFeatures, repsCsv, scoreRep, withNoise, type RepFeatures, type Skeleton, type Vec3 } from './squat.ts'
+import { createRepDetector, formMiss, MEDIAPIPE_NOISE, repFeatures, repsCsv, scoreRep, withNoise, type RepFeatures, type Skeleton, type Vec3 } from './squat.ts'
 import { REHAB_MODEL } from './squatModel.ts'
 
 const UP: Vec3 = [0, 0, 1]
@@ -51,4 +51,11 @@ test('repsCsv: baseline reps have no z, a knees-in rep is flagged by knee width'
   assert.match(lines[1], /^1,baseline,/)
   assert.match(lines[1], /,,$/)
   assert.match(lines[4], /^4,scored,.*,kneeWidth$/)
+})
+
+test('formMiss: names the measure past its correct-form limit, null for a correct rep', () => {
+  const correct = { depth: 105, kneeWidth: 1.2, trunkLean: 34, asymmetry: 3 }
+  assert.equal(formMiss(correct), null)
+  assert.equal(formMiss({ ...correct, depth: 63 }), 'depth')
+  assert.equal(formMiss({ ...correct, kneeWidth: 0.8, trunkLean: 46 }), 'kneeWidth') // 20% past beats 2% past
 })
