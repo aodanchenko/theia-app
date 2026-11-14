@@ -12,13 +12,14 @@ interface Props {
   children: (live: boolean) => ReactNode
 }
 
-const POSE_NOTE = { off: 'Live video', loading: 'Loading pose model…', running: 'Live · MediaPipe Pose heavy', error: 'Pose model failed to load' }
+const MODEL = 'heavy' // the ISS tablet can take the 30 MB model; it holds limbs better behind the ARED frame
+const POSE_NOTE = { off: 'Live video', loading: 'Loading pose model…', running: `Live · MediaPipe Pose ${MODEL}`, error: 'Pose model failed to load' }
 
 export default function CameraPanel({ stream, caption, onPose, children }: Props) {
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const live = stream !== null
-  const pose = usePose(video, canvas, live, onPose, 'heavy')
+  const pose = usePose(video, canvas, live, onPose, MODEL)
 
   useEffect(() => { if (video.current) video.current.srcObject = stream }, [stream])
 
