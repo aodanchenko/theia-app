@@ -32,7 +32,7 @@ export default function SpacePage() {
       }
       camera={
         <CameraPanel cue={s.cue} caption={['CAM 1 · FRONT · 30 FPS', `SET ${s.set} · REP ${s.rep}/${s.reps} · ${s.loadKg} KG`]}>
-          <SimulatedCamera theme="space" width={520} height={548} tags={OVERLAY_TAGS} ruler />
+          {(live) => <SimulatedCamera theme="space" width={520} height={548} scene={!live} tags={OVERLAY_TAGS} ruler />}
         </CameraPanel>
       }
       side={
