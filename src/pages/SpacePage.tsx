@@ -12,6 +12,7 @@ import { ToolButton, ToolGroup, ToolNote, Toolbar } from '../components/space/To
 import ModelCheck from '../components/space/ModelCheck.tsx'
 import Panel from '../components/space/Panel.tsx'
 import ParameterSheet from '../components/space/ParameterSheet.tsx'
+import RotateGate from '../components/space/RotateGate.tsx'
 import Recommendation, { type Tone } from '../components/space/Recommendation.tsx'
 import RepChart from '../components/space/RepChart.tsx'
 import VitalsGrid from '../components/space/VitalsGrid.tsx'
@@ -97,6 +98,8 @@ export default function SpacePage() {
     : `vs your baseline (${s.baselineSessions} sessions) · ${s.model} · known cause: ${s.knownCause}`
 
   return (
+    <>
+    <RotateGate />
     <Workbench
       header={
         <Header title="THEIA Workbench" file={s.file}>
@@ -179,5 +182,6 @@ export default function SpacePage() {
         />
       }
     />
+    </>
   )
 }

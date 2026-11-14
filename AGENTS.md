@@ -85,6 +85,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone. One exception: the red **Enable camera** button (`--nasa-red`).
 - **Numbers are monospace and tabular** (`--font-mono`, `font-variant-numeric: tabular-nums`), right-aligned in tables.
 - **Space is dense, with subtle bevels:** 1px `--rule` borders, 3px radius at most, 10–12px type. Depth only via the bevel tokens (raised controls, sunken readouts, grey caps title strips), never drop shadows or gradients. The one exception is the Recommendation panel (20 / 44px).
+- **Space needs a wide screen:** phones upright get `RotateGate`; phones sideways get a narrower camera column.
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
 - **Motion:** entrances only, once. Use the `enter` class (rise, optional `--delay` in ms) or `pop` (SVG overlays). `prefers-reduced-motion` turns them off. No `transition: all`.
 - **Anything simulated says so**, with the visible label `SIMULATED` (see Vitals).
@@ -104,6 +105,7 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 |---|---|---|
 | `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `scene`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`; joints: `rk`, `rh`, `rs` …; `scene={false}` draws only the overlay |
 | **space/** | | |
+| `RotateGate` | – | Full-screen "Turn your phone sideways" over `/space` on a phone held upright (CSS media query, no JS). Links to Earth and home |
 | `Workbench` | `header`, `toolbar`, `camera`, `side`, `status` (nodes) | Grid shell of the tablet screen; the side column scrolls |
 | `Header` | `title`, `file`, children (menus) | Title bar: app name, menus, session file |
 | `Menu` | `label`, `items[]` | Menu-bar dropdown. Item: `{ label, checked?, onSelect }`; `checked` = View toggle. Closes on pick, outside click, Escape |

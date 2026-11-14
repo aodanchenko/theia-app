@@ -1,11 +1,13 @@
 .workbench {
   height: 100dvh;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   grid-template-rows: 30px 44px 1fr 24px;
   overflow: hidden;
   background: var(--bg);
   font-size: var(--text-md);
 }
-.main { display: grid; grid-template-columns: 520px 1fr; min-height: 0; }
-.side { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--surface); }
+.main { display: grid; grid-template-columns: min(520px, 45vw) minmax(0, 1fr); min-height: 0; } /* camera narrows on a phone turned sideways */
+.side { display: flex; flex-direction: column; min-height: 0; overflow: auto; background: var(--surface); }
 .side > * { flex: none; }
