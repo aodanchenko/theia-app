@@ -48,6 +48,16 @@
   --text-xl: 44px;  /* recommendation: action, readable from the squat rack */
 }
 
+/* Home: the customer-facing entry page. Same styles as the Theia landing page (theia-site): Computer Modern, ink on white, red accent. */
+[data-theme="home"] {
+  --bg: oklch(0.995 0 0);
+  --ink: oklch(0.18 0 0);
+  --muted: oklch(0.45 0 0);
+  --rule: oklch(0.18 0 0 / .14);
+  --accent: oklch(0.52 0.17 30);  /* hover, press and focus, as on the landing page */
+  --font-body: 'CMU Serif', 'Latin Modern Roman', Georgia, serif;
+}
+
 /* Earth: rehab at home on a phone. Warm, large, one instruction at a time. */
 [data-theme="earth"] {
   --bg: #f3eee4;

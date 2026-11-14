@@ -54,7 +54,7 @@ scripts/                 offline tools (train-squat.ts)
 
 ### Themes
 
-`src/main.tsx` sets `document.documentElement.dataset.theme` to `space` or `earth` per route. Components never hard-code a theme; they read tokens.
+`src/main.tsx` sets `document.documentElement.dataset.theme` to `home`, `space` or `earth` per route. `home` uses the Theia landing page styles (theia-site): Computer Modern, ink on white, red accent for hover, press and focus. Components never hard-code a theme; they read tokens.
 
 | Token | Meaning | Space | Earth |
 |---|---|---|---|
@@ -85,6 +85,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone. One exception: the red **Enable camera** button (`--nasa-red`).
 - **Numbers are monospace and tabular** (`--font-mono`, `font-variant-numeric: tabular-nums`), right-aligned in tables.
 - **Space is dense, with subtle bevels:** 1px `--rule` borders, 3px radius at most, 10–12px type. Depth only via the bevel tokens (raised controls, sunken readouts, grey caps title strips), never drop shadows or gradients. The one exception is the Recommendation panel (20 / 44px).
+- **Home is customer-facing:** no hackathon or event references; plain landing (wordmark, headline, two ink-outline buttons); every row a ≥ 44px tap target; safe-area padding.
 - **Space needs a wide screen:** phones upright get `RotateGate`; phones sideways get a narrower camera column.
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
 - **Motion:** entrances only, once. Use the `enter` class (rise, optional `--delay` in ms) or `pop` (SVG overlays). `prefers-reduced-motion` turns them off. No `transition: all`.

@@ -7,8 +7,8 @@ import SpacePage from './pages/SpacePage.tsx'
 import type { Theme } from './types.ts'
 
 // shortcut: path lookup instead of a router; add one when pages need in-app navigation or state in the URL.
-const ROUTES: Record<string, { title: string; theme: Theme; Page: ComponentType }> = {
-  '/': { title: 'Theia', theme: 'space', Page: HomePage },
+const ROUTES: Record<string, { title: string; theme: Theme | 'home'; Page: ComponentType }> = {
+  '/': { title: 'Theia', theme: 'home', Page: HomePage },
   '/space': { title: 'Theia · Space', theme: 'space', Page: SpacePage },
   '/earth': { title: 'Theia · Earth', theme: 'earth', Page: EarthPage },
   // Throwaway design prototypes, dev server only (never in the production bundle).
