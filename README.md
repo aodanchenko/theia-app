@@ -13,15 +13,9 @@ npm test        # engine tests (node:test)
 npm run lint
 ```
 
-## Layout
+## Layout and design system
 
-| Path | What | Rule |
-|---|---|---|
-| `src/engine/` | features (joint angles, depth, asymmetry, tempo, sway) and the decision | Plain JS, no React/DOM. Must run in Node too, so a backend can reuse it |
-| `src/store.js` | all saving and loading (browser storage for now) | The only file that touches storage |
-| `src/capture/` | camera + MediaPipe Pose → 33 landmarks | Add when built |
-| `src/session/` | Duolingo-style flow: same steps, feedback, streak | Add when built |
-| `src/ui/` | decision card, body figure, charts | Add when built |
+See [AGENTS.md](AGENTS.md): folders, design tokens, the component catalog, and code and product rules.
 
 ## Rules
 
