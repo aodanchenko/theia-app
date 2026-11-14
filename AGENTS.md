@@ -16,7 +16,7 @@ Runs fully in the browser. No backend.
 ## Commands
 
 ```sh
-npm run dev      # http://localhost:5173/space, /earth
+npm run dev      # http://localhost:5173 (/, /space, /earth)
 npm test         # node:test, engine + functions
 npm run lint     # oxlint
 npm run build
@@ -27,15 +27,16 @@ npm run deploy   # Cloudflare Pages, behind a shared password
 
 ```
 src/
-  design/tokens.css     design system: tokens, reset, motion. The only global CSS for /space and /earth.
+  main.jsx              entry + routes: / (home), /space, /earth. Sets the theme per route.
+  design/tokens.css     design system: tokens, reset, motion. The only global CSS.
   components/
     SimulatedCamera.jsx  drawn stand-in for the camera (both modes)
     space/               workbench components
     earth/               coach screen components
-  pages/                 SpacePage, EarthPage + their entry files (space.jsx, earth.jsx)
+  pages/                 HomePage, SpacePage, EarthPage
   data/demo.js           simulated session data. Replace with engine output.
   engine/                features (plain JS, no React/DOM, must run in Node)
-  capture/PoseCamera.jsx live camera + MediaPipe Pose
+  capture/               useCameraStream (camera on/off), PoseCamera (camera + MediaPipe Pose, not wired in yet)
   store.js               the only file that touches storage
 functions/               Cloudflare Pages middleware (password)
 proto/                   design reference (static HTML). Not imported by the app.
@@ -45,7 +46,7 @@ proto/                   design reference (static HTML). Not imported by the app
 
 ### Themes
 
-The page entry sets `document.documentElement.dataset.theme` to `space` or `earth`. Components never hard-code a theme; they read tokens.
+`src/main.jsx` sets `document.documentElement.dataset.theme` to `space` or `earth` per route. Components never hard-code a theme; they read tokens.
 
 | Token | Meaning | Space | Earth |
 |---|---|---|---|
@@ -68,7 +69,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 ### Rules
 
 - **Colour comes from tokens.** No hex in components. The exception is `SimulatedCamera`'s scene palette (wall, floor, body), which is an illustration.
-- **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone.
+- **Red means "flagged".** `--alert` is only for values past a threshold, and always comes with text or `▲`, never colour alone. One exception: the red **Enable camera** button (`--nasa-red`).
 - **Numbers are monospace and tabular** (`--font-mono`, `font-variant-numeric: tabular-nums`), right-aligned in tables.
 - **Space is dense and flat:** 1px `--rule` borders, 3px radius at most, no shadows, 10–12px type.
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
@@ -81,12 +82,12 @@ Each component is one `.jsx` file plus a `.module.css` next to it. Props are pla
 
 | Component | Props | Notes |
 |---|---|---|
-| `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`; joints: `rk`, `rh`, `rs` … |
+| `SimulatedCamera` | `theme`, `width`, `height`, `figureHeight`, `scene`, `arrow`, `tags[]`, `ruler` | `tags`: `{ joint, dx, dy, label, alert }`; joints: `rk`, `rh`, `rs` …; `scene={false}` draws only the overlay |
 | **space/** | | |
 | `Workbench` | `menu`, `toolbar`, `camera`, `side`, `status`, `tabs` (nodes) | Grid shell of the tablet screen |
 | `MenuBar` | `title`, `items[]`, `file` | |
 | `Toolbar`, `ToolChip`, `ToolSeparator` | `ToolChip`: `active`, `live`, children | Chips are read-only state, not buttons |
-| `CameraPanel` | `cue`, `caption[]`, children (camera) | Cue banner top-left, caption top-right |
+| `CameraPanel` | `cue`, `caption[]`, `children(live)` | Enable/stop camera button; live video under the overlay. Cue top-left, caption top-right |
 | `FormulaBar` | `cell`, `formula` | |
 | `ParameterSheet` | `rows[]`, `selected` | Row: `{ name, now, base, delta, flag? }`. Flagged rows turn `--alert` |
 | `Panel` | `title`, `note`, `delay`, children | Titled section in the side column |
