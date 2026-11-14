@@ -1,4 +1,5 @@
-.header { display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--surface); border-bottom: 1px solid var(--rule); color: var(--ink); }
-.header b { font-weight: 700; font-size: var(--text-sm); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); text-shadow: var(--engraved); }
-.file { margin-left: auto; color: var(--muted); font-family: var(--font-mono); text-shadow: var(--engraved); }
+/* NASA black: with the blue status bar, the two ends of a mission console */
+.header { display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--nasa-black); color: var(--surface); }
+.header b { font-weight: 700; font-size: var(--text-sm); letter-spacing: .14em; text-transform: uppercase; color: var(--surface); text-shadow: var(--engraved-dark); }
+.file { margin-left: auto; color: color-mix(in srgb, var(--surface) 65%, transparent); font-family: var(--font-mono); }
 .menus { display: flex; gap: 2px; }
