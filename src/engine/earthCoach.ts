@@ -87,3 +87,20 @@ export function markFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { joint
     asymmetry: sides.map((side) => ({ joints: [side === 'left' ? 25 : 26], label: t.markLeg, arrow: null })),
   }[v.feature]
 }
+
+// Feedback on the set so far, shown while paused and when the set is done: how many reps were on target, the best run,
+// the fix that came up most (with the reps it came up on), and knee bend against the person's own normal.
+export function setReport(reps: RepFeatures[], model: SquatModel, threshold: number, p: EarthProfile, lang: Lang = 'en') {
+  const results = repResults(reps, model, threshold)
+  const scored = results.filter((r) => r !== 'learn').length
+  const good = results.filter((r) => r === 'good').length
+  let best = 0, run = 0
+  for (const r of results) { run = r === 'good' ? run + 1 : 0; best = Math.max(best, run) }
+  const fixes = reps.flatMap((_, i) => { const v = judgeLastRep(reps.slice(0, i + 1), model, threshold); return v.kind === 'fix' ? [{ v, rep: i + 1 }] : [] })
+  const repsOf = (f: FeatureKey) => fixes.filter((x) => x.v.feature === f).map((x) => x.rep)
+  const top = fixes.reduce<(typeof fixes)[number] | null>((a, x) => (!a || repsOf(x.v.feature).length >= repsOf(a.v.feature).length ? x : a), null) // ties: the latest
+  const fix = top ? { verdict: top.v, title: cueFor(top.v, p, lang).title, reps: repsOf(top.v.feature) } : null
+  const after = reps.slice(CALIBRATION)
+  const depth = after.length ? { now: Math.round(meanFeatures(after).depth), normal: Math.round(meanFeatures(reps.slice(0, CALIBRATION)).depth) } : null
+  return { learned: Math.min(reps.length, CALIBRATION), scored, good, best, fix, depth }
+}

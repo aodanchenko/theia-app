@@ -1,0 +1,17 @@
+.report { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 56px 16px 16px; border-radius: var(--r-frame); background: var(--surface); box-shadow: inset 0 0 0 2px var(--rule); color: var(--ink); }
+.label { position: absolute; left: 12px; top: 12px; padding: 6px 12px; border-radius: var(--r-tag); background: var(--bg); font-family: var(--font-num); font-size: calc(var(--text-md) * .85); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.figure { flex: 1; min-height: 0; width: 100%; }
+.figure line { stroke: var(--ink); stroke-width: 9; stroke-linecap: round; }
+.head { fill: var(--ink); }
+.joint { fill: var(--surface); stroke: var(--ink); stroke-width: 3; }
+.joint[data-kind="fix"] { fill: var(--fix); }
+.joint[data-kind="good"] { fill: var(--good); }
+.callout line { stroke: var(--fix); stroke-width: 2.5; }
+.callout text { fill: var(--fix-text); font: 700 13px var(--font-body); }
+.lines { display: grid; gap: 6px; margin-top: auto; padding: 0; list-style: none; font-size: var(--text-md); line-height: 1.25; }
+.lines li { display: flex; align-items: center; gap: 10px; }
+.lines li[data-kind="good"] { color: var(--good-text); }
+.lines li[data-kind="fix"] { color: var(--fix-text); }
+.lines small { font-size: 1em; font-weight: 400; color: var(--muted); }
+.mark { display: inline-grid; place-items: center; width: 22px; flex: none; font-size: 22px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--muted); }

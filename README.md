@@ -2,62 +2,43 @@
 
 <h1 align="center">Theia</h1>
 
-<p align="center">A phone camera checks each squat against your own normal and tells you, in plain words, what to adjust.</p>
+<p align="center"><b>Stay strong, stay safe: a camera coach against injury and bone loss. On Earth and in space.</b></p>
 
-Built for the NASA Space Apps Challenge 2026 (Vienna), challenge "Health Monitoring Software for Astronauts". One web app, two modes:
+<p align="center">
+  <a href="https://theia-app.pages.dev">Live demo</a> ·
+  <a href="https://theia-app.pages.dev/space">Space</a> ·
+  <a href="https://theia-app.pages.dev/earth">Earth</a>
+</p>
 
-- **Space** (`/space`, tablet): an astronaut's squat on ARED. MediaPipe Pose tracks the body, the app compares the astronaut with their own baseline and suggests: continue / change load / change technique.
-- **Earth** (`/earth`, phone): the same check for rehab at home, in English and Ukrainian, one calm instruction at a time.
+Our project for the **NASA Space Apps Challenge 2026** (Vienna), challenge **"Health Monitoring Software for Astronauts"**.
 
-Live: https://theia-app.pages.dev
+![Theia Workbench: the astronaut's squat on ARED with joint angles, the recommendation "Knees out", the parameter table, form drift per rep, vitals and the weekly squat dose](docs/space-workbench.png)
 
-Runs fully in the browser; camera video never leaves the device. No backend.
+## What it does
+
+Astronauts lose 1–1.5% of their hip bone a month without heavy resistance exercise. On Earth, similar loss hits people after a leg injury or amputation. 
+
+Exercise only protects bone, muscle and joints when it's done often and done correctly, and usually nobody is there to watch.
+
+**Theia watches every rep through a camera and tells you what to fix:**
+
+- **Space** (`/space`, tablet).
+- **Earth** (`/earth`, phone).
+
+## Run it
+
+You need [Node.js](https://nodejs.org) 24 or newer.
 
 ```sh
+git clone https://github.com/aodanchenko/theia-app.git
+cd theia-app
 npm install
-npm run dev     # http://localhost:5173
-npm test        # engine tests (node:test)
-npm run lint
-npm run typecheck
+npm run dev
 ```
 
-## Layout and design system
+## Team
 
-See [AGENTS.md](AGENTS.md): folders, design tokens, the component catalog, and code and product rules.
-
-## Rules
-
-- Compare each astronaut with their own baseline, never Earth norms.
-- Triage and guidance only, never prescription. Every flag carries a cited action.
-- Simulated data is labelled "simulated" in the UI.
-- Never commit raw video or datasets.
-
-## Deploy
-
-Hosted on Cloudflare Pages: https://theia-app.pages.dev
-
-```sh
-npx wrangler login   # once
-npm run deploy
-```
-
-The site is public. `functions/_middleware.ts` only redirects old `/path/` URLs to `/path`.
-
-## Sources and third-party licences
-
-Space Apps requires every source to be cited and every non-NASA material to be open source.
-
-| What | Used for | Licence |
-|---|---|---|
-| [MediaPipe Tasks Vision](https://github.com/google-ai-edge/mediapipe) + Pose Landmarker model | body tracking | Apache-2.0 |
-| [React](https://react.dev), [Vite](https://vite.dev) | app framework, build | MIT |
-| [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/), [IBM Plex](https://github.com/IBM/plex), [Computer Modern Unicode](https://cm-unicode.sourceforge.io) | fonts | SIL OFL 1.1 |
-| UI-PRMD: Vakanski et al., "A Data Set of Human Body Movements for Physical Rehabilitation Exercises", *Data* 3(1):2, 2018 ([zenodo](https://zenodo.org/records/23104965)) | tuning the squat thresholds; only derived statistics are in the repo, not the data | as published by the authors |
-| NASA photo S133-E-008323 (`public/ared-squat.jpg`) | Space demo | NASA media, no copyright |
-| Lang et al., *J Bone Miner Res* 19(6), 2004; Smith et al., *J Bone Miner Res* 27(9), 2012 | bone-loss facts in "This week" | cited, not copied |
-| Casiez et al., "1 € Filter", CHI 2012 | smoothing pose landmarks (our own implementation) | algorithm |
-
-Feedback sounds are synthesized in the browser by our own code (`src/capture/chimes.ts`).
+[Anna Danchenko](https://www.linkedin.com/in/anna-danchenko/) · [Mariia Shevtsova](https://www.linkedin.com/in/mariia-shevtsova-0751a2193/) · [Oleksandr Namchuk](https://www.linkedin.com/in/oleksandr-namchuk-249488236/) · [Hlib Plakhtii](https://www.linkedin.com/in/hlib-plakhtii/)
 
 ## License
 

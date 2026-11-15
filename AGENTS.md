@@ -145,6 +145,7 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `AboutYou` | `initial?`, `onDone`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing/lying, voice, bigger text |
 | `PlacePhone` | `camera`, `seen`, `error`, `onRetry`, `onDone` | Optional setup: hip height, 2–3 steps; frame turns green with "I can see you" |
 | `EarthCamera` | `stream`, `onPose`, `label?`, `away?`, `marks[]` | The camera framed inside the page: mirrored video + skeleton, activity label, dashed "stand here" outline, marks placed on the real joints (maps video coords through the cover crop and mirror) |
+| `SetReport` | `t`, `lang`, `profile`, `report`, `total` | In the camera's place while paused or when the set is done (`setReport` in earthCoach.ts): a standing figure with the most common fix marked on the joint, then on target n of n (best run), that fix and its reps, knee bend vs your normal. Seated/lying sets get the lines only. Picked from 5 paused-screen prototypes (`/proto/paused`) |
 | `Settings` | `profile`, `onChange`, `onEditAbout`, `onPlace`, `onReset`, `onClose` | About you, speak tips, bigger text, placing the phone, get help (stop + 112), about, start over |
 
 ## Code rules

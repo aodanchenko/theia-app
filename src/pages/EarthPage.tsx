@@ -11,9 +11,10 @@ import DeviceFrame from '../components/earth/DeviceFrame.tsx'
 import EarthCamera, { type BodyMark } from '../components/earth/EarthCamera.tsx'
 import NoteCard from '../components/earth/NoteCard.tsx'
 import PlacePhone from '../components/earth/PlacePhone.tsx'
+import SetReport from '../components/earth/SetReport.tsx'
 import Settings from '../components/earth/Settings.tsx'
 import { activityLabel, createActivityTracker, type Activity } from '../engine/activity.ts'
-import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
+import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, setReport, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
 import { createRepDetector, fromMediaPipe, MEDIAPIPE_NOISE, MEDIAPIPE_UP, withNoise, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
 import { TEXT, type Lang } from '../earthText.ts'
@@ -145,7 +146,7 @@ export default function EarthPage() {
       : (
         <CoachScreen
           bar={<CoachBar t={t} results={results} total={SET_REPS} paused={!running} onPause={toggle} onSettings={() => setScreen('settings')} />}
-          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position, lang) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
+          camera={(!running || done) && !camera.error ? <SetReport t={t} lang={lang} profile={profile} report={setReport(reps, MODEL, THRESHOLD, profile, lang)} total={SET_REPS} /> : <EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position, lang) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
           note={<NoteCard kind={note.kind} title={note.title} line={note.line} />}
           action={<ChunkyButton tone={done ? 'good' : undefined} onClick={toggle}>{camera.error ? t.tryAgain : done ? t.anotherSet : running ? t.pause : t.resume}</ChunkyButton>}
         />
