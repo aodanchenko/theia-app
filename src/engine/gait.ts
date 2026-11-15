@@ -302,12 +302,6 @@ export function assessWindow(w: TcnWeights | null, p: Pose17[], opts: { minSide:
   return { start: opts.start, view, regions: assessRegions(p, view), criteria: w ? assessCriteria(w, p, view, opts) : [] }
 }
 
-// The region that deviates most (highest percentile past the threshold), and which way its top feature is off.
-export function worstRegion(win: WalkWindow): (RegionResult & { top: NonNullable<RegionResult['top']>; more: boolean }) | null {
-  const off = win.regions.filter((r) => r.state === 'deviation' && r.top).sort((a, b) => (b.percentile ?? 0) - (a.percentile ?? 0))[0]
-  return off?.top ? { ...off, top: off.top, more: off.top.value > off.top.median } : null
-}
-
 // A window counts once the view is known and at least one region could be measured.
 export const assessed = (win: WalkWindow) => win.regions.some((r) => r.state !== 'unavailable')
 
@@ -315,4 +309,44 @@ export const assessed = (win: WalkWindow) => win.regions.some((r) => r.state !==
 export function scoredSeconds(windows: WalkWindow[]): WalkWindow[] {
   let last = -Infinity
   return windows.filter((w) => assessed(w) && w.start >= last + WINDOW_S - 1e-6 && ((last = w.start), true))
+}
+
+// ---------- named compensations ----------
+// The deviations the models see, named as the compensation they usually are, so feedback can say what to do.
+// shortcut: generic gait cues pending a physiotherapist's review; leg swing-out (circumduction) is not measured.
+export type Compensation = 'hipHike' | 'sideLean' | 'forwardLean' | 'stiffKnee' | 'unevenSteps' | 'stiffArm'
+export interface WalkPerson { prosthesis: boolean; side: 'left' | 'right' | null; aid: boolean } // side: the affected / prosthesis side, if known
+export interface Found { kind: Compensation; side: 'left' | 'right' | null; region: RegionResult | null; criterion?: Criterion; strength: number } // strength 0..1
+
+// The TCN criteria that stand for a named compensation.
+export const CRITERION_COMPENSATION: Record<string, Compensation> = { knee_rom95_asymmetry_high: 'unevenSteps', hip_line_rom95_proxy_high: 'hipHike', trunk_frontal_rom95_high: 'sideLean', trunk_side_rom95_high: 'forwardLean', knee_rom95_mean_low: 'stiffKnee' }
+
+export function compensationFor(win: WalkWindow, who: WalkPerson): Found | null {
+  const kneeFlagOk = (side: 'left' | 'right') => !who.prosthesis || (who.side !== null && who.side !== side) // never flag the prosthetic knee for being one
+  const found: Found[] = []
+  for (const r of win.regions) {
+    if (r.state !== 'deviation' || !r.top) continue
+    const more = r.top.value > r.top.median, front = win.view === 'front_rear', strength = (r.percentile ?? 0) / 100
+    const side = r.region.startsWith('left') ? 'left' : r.region.startsWith('right') ? 'right' : null
+    const kind: Compensation | null =
+      r.region === 'hips' && front && more ? 'hipHike'
+      : (r.region === 'trunk' || r.region === 'shoulders') && front && more ? 'sideLean'
+      : r.region === 'trunk' && !front && more ? 'forwardLean'
+      : r.region.endsWith('knee') && !more && side && kneeFlagOk(side) ? 'stiffKnee'
+      : r.region.endsWith('arm') && !more && !who.aid ? 'stiffArm'
+      : null
+    if (kind) found.push({ kind, side, region: r, strength })
+  }
+  for (const c of win.criteria) {
+    const kind = CRITERION_COMPENSATION[c.id]
+    if (c.state !== 'deviation' || !kind || (kind === 'stiffKnee' && who.prosthesis)) continue // the model's knee range has no side
+    found.push({ kind, side: null, region: null, criterion: c, strength: c.score ?? 0 })
+  }
+  return found.sort((a, b) => b.strength - a.strength)[0] ?? null
+}
+
+// MediaPipe landmarks where the mark for a compensation goes (mirrored selfie: the person's left is landmark 23/25/13).
+export function compensationJoints(f: Found): number[] {
+  const knee = f.side === 'left' ? [25] : f.side === 'right' ? [26] : [25, 26]
+  return { hipHike: [23, 24], sideLean: [11, 12], forwardLean: [11, 12], stiffKnee: knee, unevenSteps: [25, 26], stiffArm: f.side === 'left' ? [13] : [14] }[f.kind]
 }

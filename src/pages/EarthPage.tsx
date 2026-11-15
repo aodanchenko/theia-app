@@ -16,7 +16,7 @@ import ExerciseSwitch, { type Exercise } from '../components/earth/ExerciseSwitc
 import WalkReport from '../components/earth/WalkReport.tsx'
 import useWalk from '../capture/useWalk.ts'
 import useWakeLock from '../capture/useWakeLock.ts'
-import { assessed, scoredSeconds, UNITS, worstRegion, type Region } from '../engine/gait.ts'
+import { assessed, compensationFor, compensationJoints, scoredSeconds } from '../engine/gait.ts'
 import Settings from '../components/earth/Settings.tsx'
 import { activityLabel, createActivityTracker, type Activity } from '../engine/activity.ts'
 import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, setReport, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
@@ -30,7 +30,6 @@ const MODEL = withNoise(REHAB_MODEL, MEDIAPIPE_NOISE)
 const THRESHOLD = EVAL.personal.threshold
 
 type Screen = 'about' | 'place' | 'live' | 'settings'
-const REGION_JOINTS: Record<Region, number[]> = { trunk: [11, 12, 23, 24], hips: [23, 24], shoulders: [11, 12], left_knee: [25], right_knee: [26], left_arm: [13], right_arm: [14] } // where a walking mark goes
 
 // Earth journey: About you (first open) → place the phone (optional) → camera home with live coaching; settings from the gear.
 export default function EarthPage() {
@@ -65,7 +64,8 @@ export default function EarthPage() {
   const [exercise, setExercise] = useState<Exercise>('squat')
   const walking = exercise === 'walk'
   const walk = useWalk(walking && running && screen === 'live' && camera.status === 'on')
-  // Walking: one segment per scored second; fix = a region off typical.
+  // Walking: one segment per scored second; fix = a named compensation (the prosthetic knee and aid users' arms are never flagged).
+  const who = { prosthesis: !!profile?.prosthesis, side: profile?.side === 'left' || profile?.side === 'right' ? profile.side : null, aid: !!profile?.aid }
   const walkWindows = scoredSeconds(walk.windows).slice(0, SET_REPS)
   const live = useRef({ squat: running, walk: false, feed: walk.feed }) // the pose callback reads this without being recreated
   useEffect(() => { live.current = { squat: !walking && running && reps.length < SET_REPS, walk: walking && running && walkWindows.length < SET_REPS, feed: walk.feed } })
@@ -92,10 +92,10 @@ export default function EarthPage() {
 
   // The note for right now, in priority order: camera problem → set done → paused → not in view → last rep → start.
   const verdict = reps.length ? judgeLastRep(reps, MODEL, THRESHOLD) : null
-  const results: NoteKind[] = walking ? walkWindows.map((w) => (worstRegion(w) ? 'fix' : 'good')) : repResults(reps, MODEL, THRESHOLD)
+  const results: NoteKind[] = walking ? walkWindows.map((w) => (compensationFor(w, who) ? 'fix' : 'good')) : repResults(reps, MODEL, THRESHOLD)
   const good = results.filter((r) => r === 'good').length
   const lastWalk = walk.windows.slice(-3).reverse().find(assessed) ?? walk.windows.at(-1) // the latest scored second, so one unclear window does not flash the framing hint
-  const walkOff = lastWalk ? worstRegion(lastWalk) : null
+  const walkOff = lastWalk ? compensationFor(lastWalk, who) : null
   const note: { kind: NoteKind; title: string; line: string } =
     camera.error ? { kind: 'idle', title: t.cameraOff, line: t.cameraErrors[camera.errorCode ?? ''] ?? t.cameraErrors.other }
     : camera.status !== 'on' ? { kind: 'idle', title: t.starting, line: t.allowCamera }
@@ -104,15 +104,15 @@ export default function EarthPage() {
     : activity === 'away' ? { kind: 'idle', title: t.stepIn, line: t.stepInLine }
     : walking ? (
       !lastWalk ? { kind: 'idle', title: t.startWhenReady, line: t.walkStart }
-      : walkOff ? { kind: 'fix', title: t.walkOff(t.region[walkOff.region], walkOff.more), line: t.walkDetail(t.walkFeature[walkOff.top.feature], walkOff.top.value, UNITS[walkOff.top.feature], walkOff.top.p05, walkOff.top.p95) }
-      : assessed(lastWalk) ? { kind: 'good', title: t.walkSteady, line: t.walkSteadyLine }
+      : walkOff ? { kind: 'fix', title: t.comp[walkOff.kind].tip(walkOff.side), line: `${t.comp[walkOff.kind].name} · ${t.comp[walkOff.kind].why}` }
+      : assessed(lastWalk) ? { kind: 'good', title: t.walkGood, line: t.walkGoodLine }
       : { kind: 'idle', title: t.walkView, line: t.walkViewLine })
     : verdict && profile ? noteFor(verdict, reps.length, profile, lang)
     : { kind: 'idle', title: t.startWhenReady, line: profile ? startHint(profile, lang) : '' }
 
   // Marks on the body for the last rep, while you stand between reps.
   const walkMarks: BodyMark[] = walking && walkOff && repPose && running && !done
-    ? [REGION_JOINTS[walkOff.region].map((j) => repPose[j]).filter(Boolean)].filter((pts) => pts.length).map((pts) => ({ x: pts.reduce((a, p) => a + p.x, 0) / pts.length, y: pts.reduce((a, p) => a + p.y, 0) / pts.length, label: t.region[walkOff.region], arrow: null, kind: 'fix' as const }))
+    ? [compensationJoints(walkOff).map((j) => repPose[j]).filter(Boolean)].filter((pts) => pts.length).map((pts) => ({ x: pts.reduce((a, p) => a + p.x, 0) / pts.length, y: pts.reduce((a, p) => a + p.y, 0) / pts.length, label: t.comp[walkOff.kind].mark, arrow: null, kind: 'fix' as const }))
     : []
   const marks: BodyMark[] = walking ? walkMarks : verdict && profile && repPose && activity === 'standing' && running && !done
     ? markFor(verdict, profile, lang).map((m) => {
@@ -177,7 +177,7 @@ export default function EarthPage() {
           camera={<>
             <ExerciseSwitch t={t} value={exercise} onChange={changeExercise} />
             {(!running || done) && !camera.error
-              ? walking ? <WalkReport t={t} windows={walkWindows} total={SET_REPS} /> : <SetReport t={t} lang={lang} profile={profile} report={setReport(reps, MODEL, THRESHOLD, profile, lang)} total={SET_REPS} />
+              ? walking ? <WalkReport t={t} windows={walkWindows} who={who} total={SET_REPS} /> : <SetReport t={t} lang={lang} profile={profile} report={setReport(reps, MODEL, THRESHOLD, profile, lang)} total={SET_REPS} />
               : <EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? (walking ? t.walking : activityLabel(activity, profile.position, lang)) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
           </>}
           note={<NoteCard kind={note.kind} title={note.title} line={note.line} />}

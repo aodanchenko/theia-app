@@ -23,7 +23,8 @@ import Workbench from '../components/space/Workbench.tsx'
 import { DEMO_REPS, OVERLAY_TAGS, SESSION, WEEK } from '../data/demo.ts'
 import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, SHORT, withNoise, formLimitText, formMiss, pastForm, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, IDEAL, REHAB_MODEL } from '../engine/squatModel.ts'
-import { assessed, FEATURES as GAIT_FEATURES, REGIONS, scoredSeconds, UNITS, worstRegion, type WalkWindow } from '../engine/gait.ts'
+import { assessed, compensationFor, CRITERION_COMPENSATION, FEATURES as GAIT_FEATURES, REGIONS, scoredSeconds, UNITS, type WalkWindow } from '../engine/gait.ts'
+import { TEXT } from '../earthText.ts'
 import type { Parameter } from '../types.ts'
 
 const s = SESSION
@@ -101,29 +102,34 @@ function recommend(live: ReturnType<typeof liveView> | null, n: number, tracking
 const DEMO_REC = recommend(DEMO_VIEW, DEMO_REPS.length, null)
 
 // Walking windows → what the workbench shows. EXPERIMENTAL: the gait package's models were developed on Sapiens2 poses.
+const COMP = TEXT.en.comp // the same named compensations and tips as Earth
+const CREW = { prosthesis: false, side: null, aid: false } // shortcut: no crew profile yet; every compensation is reported
 const REGION_TITLE = { trunk: 'Trunk', hips: 'Pelvis / hips', shoulders: 'Shoulders', left_knee: 'Left knee / leg', right_knee: 'Right knee / leg', left_arm: 'Left arm', right_arm: 'Right arm' }
 const WALK_HEADS = ['Region', 'Now', 'Typical', 'Rank', 'Flag']
 const CRITERIA_HEADS = ['Model criterion', 'Predicted', '', 'Score', 'Flag']
 const WALK_BASIS = 'EXPERIMENTAL · Theia gait models (regional density + TCN), developed on Sapiens2 poses, not validated on MediaPipe · reference = walking on the ground'
+// The compensation one region's deviation stands for, if it has a name (the region alone, as if nothing else were off).
+const named = (w: WalkWindow, r: WalkWindow['regions'][number]) => { const f = compensationFor({ ...w, regions: [r], criteria: [] }, CREW); return f ? COMP[f.kind].name.toLowerCase() : null }
+
 function walkView(windows: WalkWindow[], cameraOn: boolean): { rows: Parameter[]; criteria: Parameter[]; seconds: number; flags: number; state: string; rec: { decision: string; action: string; reason: string; next?: string; tone: Tone } } {
-  const done = scoredSeconds(windows), last = windows.slice(-3).reverse().find(assessed) ?? windows.at(-1), off = last ? worstRegion(last) : null
+  const done = scoredSeconds(windows), last = windows.slice(-3).reverse().find(assessed) ?? windows.at(-1), off = last ? compensationFor(last, CREW) : null
   const rows: Parameter[] = REGIONS.map((region) => {
     const r = last?.regions.find((x) => x.region === region)
     if (!r?.top || r.state === 'unavailable') return { name: REGION_TITLE[region], now: '—', correct: '—', base: '—' }
     const u = UNITS[r.top.feature], more = r.top.value > r.top.median
     return { name: REGION_TITLE[region], now: `${Math.round(r.top.value)}${u}`, correct: `${Math.round(r.top.p05)}–${Math.round(r.top.p95)}${u}`, base: `P${Math.round(r.percentile ?? 0)}`,
-      ...(r.state === 'deviation' ? { flag: `${more ? 'more' : 'less'} ${['angle', 'range', 'variability', 'speed'][r.top.feature]}`, tone: 'caution' as const } : {}) }
+      ...(r.state === 'deviation' ? { flag: (last && named(last, r)) ?? `${more ? 'more' : 'less'} ${['angle', 'range', 'variability', 'speed'][r.top.feature]}`, tone: 'caution' as const } : {}) }
   })
   const criteria: Parameter[] = (last?.criteria ?? []).filter((c) => c.state !== 'unavailable').map((c) => ({
     name: c.label.replace(/\s*\(.*\)|;.*/g, ''), now: `${c.value?.toFixed(1)} ${c.unit}`, correct: '', base: c.score?.toFixed(2) ?? '—',
-    ...(c.state === 'deviation' ? { flag: c.id.endsWith('_low') ? 'low' : 'high', tone: 'caution' as const } : {}),
+    ...(c.state === 'deviation' ? { flag: CRITERION_COMPENSATION[c.id] ? COMP[CRITERION_COMPENSATION[c.id]].name.toLowerCase() : c.id.endsWith('_low') ? 'low' : 'high', tone: 'caution' as const } : {}),
   }))
-  const flags = done.filter((w) => worstRegion(w)).length
+  const flags = done.filter((w) => compensationFor(w, CREW)).length
   const rec = !cameraOn ? { decision: 'Walk', action: 'Enable camera, then walk', reason: 'Side-on to the camera, or towards it and back · scored in 1 s windows', tone: 'neutral' as Tone }
     : !last ? { decision: 'Ready', action: 'Start walking', reason: 'Whole body in view, side-on or facing the camera', tone: 'neutral' as Tone }
     : !last.view ? { decision: 'Framing', action: 'Walk side-on or face the camera', reason: 'The models need a side or front/rear view', tone: 'caution' as Tone }
-    : off ? { decision: 'Check gait', action: `${REGION_TITLE[off.region]}: ${off.more ? 'more' : 'less'} than typical`, reason: `${GAIT_FEATURES[off.top.feature]} ${Math.round(off.top.value)}${UNITS[off.top.feature]}, typical ${Math.round(off.top.p05)}–${Math.round(off.top.p95)} · rank P${Math.round(off.percentile ?? 0)} of reference walks`, tone: 'caution' as Tone }
-    : assessed(last) ? { decision: 'Continue', action: 'Steady walking', reason: 'Every measured region within typical walking', tone: 'good' as Tone }
+    : off ? { decision: COMP[off.kind].name, action: COMP[off.kind].tip(off.side), reason: `${COMP[off.kind].why}${off.region?.top ? ` · ${REGION_TITLE[off.region.region]}: ${GAIT_FEATURES[off.region.top.feature].toLowerCase()} ${Math.round(off.region.top.value)}${UNITS[off.region.top.feature]}, typical ${Math.round(off.region.top.p05)}–${Math.round(off.region.top.p95)}` : off.criterion ? ` · model: ${off.criterion.label.replace(/\s*\(.*\)|;.*/g, '').toLowerCase()} ${off.criterion.value?.toFixed(1)} ${off.criterion.unit}` : ''}`, tone: 'caution' as Tone }
+    : assessed(last) ? { decision: 'Continue', action: 'Good walking', reason: 'No compensation seen · every measured region within typical walking', tone: 'good' as Tone }
     : { decision: 'Framing', action: 'Show the whole body', reason: 'Too few reliable joints in the last second', tone: 'caution' as Tone }
   return { rows, criteria, seconds: done.length, flags, state: !last ? 'WALK TO START' : off ? 'CHECK GAIT' : last.view ? `VIEW ${last.view.replace('_', '/').toUpperCase()}` : 'VIEW UNKNOWN', rec }
 }

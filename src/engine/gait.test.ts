@@ -45,3 +45,18 @@ test('gait: scored seconds never overlap and are not undercounted around unscore
   const starts = scoredSeconds([scored(0), scored(0.5), unscored(1), scored(1.5), scored(2), scored(2.5)]).map((w) => w.start)
   assert.deepEqual(starts, [0, 1.5, 2.5])
 })
+
+test('gait: deviations become named compensations; the prosthetic knee and aid users are not flagged', async () => {
+  const { compensationFor } = await import('./gait.ts')
+  const region = (r: string, value: number, median: number, percentile = 99) => ({ region: r, state: 'deviation', percentile, top: { feature: 1, value, p05: 0, median, p95: median * 2 }, reasons: [] }) as never
+  const who = { prosthesis: false, side: null, aid: false }
+  const win = (view: 'side' | 'front_rear', ...regions: never[]): WalkWindow => ({ start: 0, view, regions, criteria: [] })
+  assert.equal(compensationFor(win('front_rear', region('hips', 8, 3)), who)?.kind, 'hipHike')
+  assert.equal(compensationFor(win('side', region('trunk', 12, 4)), who)?.kind, 'forwardLean')
+  assert.equal(compensationFor(win('front_rear', region('trunk', 12, 4)), who)?.kind, 'sideLean')
+  assert.deepEqual(compensationFor(win('side', region('left_knee', 12, 35)), who), { kind: 'stiffKnee', side: 'left', region: region('left_knee', 12, 35), strength: 0.99 })
+  assert.equal(compensationFor(win('side', region('left_knee', 12, 35)), { prosthesis: true, side: 'left', aid: false }), null) // the prosthetic knee
+  assert.equal(compensationFor(win('side', region('right_knee', 12, 35)), { prosthesis: true, side: 'left', aid: false })?.kind, 'stiffKnee') // the other knee still counts
+  assert.equal(compensationFor(win('side', region('left_arm', 5, 20)), { ...who, aid: true }), null)
+  assert.equal(compensationFor(win('side', region('right_knee', 60, 35)), who), null) // more knee bend: not a compensation we name
+})
