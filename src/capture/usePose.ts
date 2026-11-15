@@ -5,6 +5,8 @@ import { createLandmarkSmoother } from '../engine/oneEuro.ts'
 // shortcut: wasm and model load from the internet on first use; copy them into public/ for fully offline use.
 const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
 // full (9 MB) for phones; heavy (30 MB, slower) holds limbs better when the ARED frame hides part of the body
+// Body only: MediaPipe's face points (0–10: nose, eyes, ears, mouth) are not drawn; they distract and the engines do not need them drawn.
+export const BODY_CONNECTIONS = PoseLandmarker.POSE_CONNECTIONS.filter(({ start, end }) => start > 10 && end > 10)
 const modelUrl = (m: 'full' | 'heavy') => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${m}/float16/1/pose_landmarker_${m}.task`
 
 // While `enabled`, runs MediaPipe Pose on the playing <video>, draws the skeleton on the canvas, and calls onPose
@@ -51,8 +53,8 @@ export default function usePose(
         const result = pose.detectForVideo(video, now)
         if (!result.landmarks[0]) return
         const landmarks = smoothImage(result.landmarks[0], now)
-        draw.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
-        draw.drawLandmarks(landmarks, { color: joint, radius: 4 })
+        draw.drawConnectors(landmarks, BODY_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
+        draw.drawLandmarks(landmarks.slice(11), { color: joint, radius: 4 })
         onPoseRef.current(smoothWorld(result.worldLandmarks[0], now), landmarks)
       }
       loop()

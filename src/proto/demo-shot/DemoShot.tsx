@@ -12,6 +12,7 @@ import Icon from '../../components/earth/Icon.tsx'
 import NoteCard from '../../components/earth/NoteCard.tsx'
 import cam from '../../components/earth/EarthCamera.module.css'
 import { TEXT } from '../../earthText.ts'
+import { BODY_CONNECTIONS } from '../../capture/usePose.ts'
 import photo from './rehab-prosthesis.jpg'
 
 const t = TEXT.en
@@ -41,8 +42,8 @@ export default function DemoShot() {
       const ctx = c.getContext('2d')
       if (!ctx) return
       const draw = new DrawingUtils(ctx)
-      draw.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, { color: '#ffffff', lineWidth: 6 }) // the app draws 3 px on a 720p video; this photo is 1280 × 2050
-      draw.drawLandmarks(lm, { color: getComputedStyle(c).getPropertyValue('--good').trim(), radius: 8 })
+      draw.drawConnectors(lm, BODY_CONNECTIONS, { color: '#ffffff', lineWidth: 6 }) // the app draws 3 px on a 720p video; this photo is 1280 × 2050
+      draw.drawLandmarks(lm.slice(11), { color: getComputedStyle(c).getPropertyValue('--good').trim(), radius: 8 })
       // the ✓ goes on the hips, as in the app after an on-target rep (object-fit: cover, not mirrored: it is a photo)
       const s = Math.max(box.clientWidth / el.naturalWidth, box.clientHeight / el.naturalHeight)
       const x = (box.clientWidth - el.naturalWidth * s) / 2 + ((lm[23].x + lm[24].x) / 2) * el.naturalWidth * s
