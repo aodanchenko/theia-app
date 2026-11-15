@@ -15,8 +15,8 @@ export default function HomePage() {
       </header>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Is this rep like your normal?</h1>
-        <p className={styles.sub}>Theia watches your movement through the camera, compares each rep with your own normal, and tells you the one thing to change.</p>
+        <h1 className={styles.title}>Adaptation or maladaptive compensation?</h1>
+        <p className={styles.sub}>After injury or spaceflight, the body compensates. Theia films a squat with a phone camera, compares each rep with your own normal, and flags <b>maladaptive compensation</b>: the change that should have faded by now.</p>
         <ul className={styles.points}>{POINTS.map((p) => <li key={p}>{p}</li>)}</ul>
 
         <nav aria-label="Choose a mode">
