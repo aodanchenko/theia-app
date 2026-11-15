@@ -13,7 +13,7 @@ export default function WalkReport({ t, windows, who, total }: { t: EarthText; w
   return (
     <section className={styles.report} aria-label={t.walkSoFar(windows.length, total)}>
       <span className={styles.label}>{t.walkSoFar(windows.length, total)}</span>
-      <ul className={styles.lines} style={{ marginTop: 0 }}>{/* no figure above: the list starts at the top */}
+      <ul className={styles.lines}>
         {windows.length === 0 && <li>{t.walkNone}</li>}
         {windows.length > 0 && <li data-kind="good"><Icon name="check" size={22} /><span><b>{t.walkSummary(good, windows.length)}</b></span></li>}
         {[...seen].sort((a, b) => b[1].n - a[1].n).map(([kind, { n, side }]) => (

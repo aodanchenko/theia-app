@@ -4,7 +4,7 @@
   font-size: calc(var(--text-md) * .9); font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   touch-action: manipulation; transition: transform 90ms ease-out, box-shadow 90ms ease-out;
 }
-.button[data-tone="good"] { background: var(--good); color: #fff; box-shadow: 0 var(--lip-depth) 0 var(--good-lip); }
+.button[data-tone="good"] { background: var(--good); color: var(--on-solid); box-shadow: 0 var(--lip-depth) 0 var(--good-lip); }
 .button:active:not(:disabled) { transform: translateY(var(--lip-depth)); box-shadow: 0 0 0 transparent; }
 .button:disabled { opacity: .5; }
 .button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }

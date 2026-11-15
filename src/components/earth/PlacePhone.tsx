@@ -19,7 +19,6 @@ export default function PlacePhone({ t, camera, seen, error, onRetry, onDone }: 
           {/* hip height + distance */}
           <line x1="42" y1="62" x2="160" y2="62" className={styles.guide} />
           <path d="M48 82 H150 M48 78 V86 M150 78 V86" className={styles.measure} />
-          <text x="99" y="78" textAnchor="middle" className={styles.label}>{t.steps}</text>
         </svg>
         <p>{t.place[0]}<b>{t.place[1]}</b>{t.place[2]}<b>{t.place[3]}</b>{t.place[4]}</p>
       </div>

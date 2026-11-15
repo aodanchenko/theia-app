@@ -8,13 +8,13 @@
 .person { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
 .guide { stroke: var(--cue); stroke-width: 2; stroke-dasharray: 4 4; }
 .measure { fill: none; stroke: var(--muted); stroke-width: 1.5; }
-.label { fill: var(--muted); font-size: 11px; font-weight: 700; }
 .preview { position: relative; display: flex; flex: 1; min-height: 160px; border-radius: var(--r-frame); box-shadow: 0 0 0 4px var(--rule); transition: box-shadow 200ms ease-out; }
 .preview[data-seen] { box-shadow: 0 0 0 4px var(--good); }
 .badge { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; min-height: 44px; max-width: calc(100% - 24px); padding: 6px 14px; border-radius: var(--r-tag); background: var(--surface); font-size: var(--text-md); font-weight: 700; }
-.preview[data-seen] .badge { background: var(--good); color: #fff; }
+.preview[data-seen] .badge { background: var(--good); color: var(--on-solid); }
 .go { min-height: 56px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule), 0 var(--lip-depth) 0 var(--lip); font-size: calc(var(--text-md) * .9); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; touch-action: manipulation; transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
-.go[data-ready] { background: var(--good); color: #fff; box-shadow: 0 var(--lip-depth) 0 var(--good-lip); }
+.go[data-ready] { background: var(--good); color: var(--on-solid); box-shadow: 0 var(--lip-depth) 0 var(--good-lip); }
 .go:active { transform: translateY(var(--lip-depth)); box-shadow: none; }
 .go:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .preview, .go { transition: none; } }
 .error { position: absolute; left: 12px; right: 12px; top: 12px; padding: 10px 14px; border-radius: var(--r-card); background: var(--surface); font-size: var(--text-md); }

@@ -72,6 +72,7 @@
   --good-lip: oklch(0.35 0.09 155);
   --good-soft: oklch(0.93 0.05 155);
   --good-text: oklch(0.42 0.09 155); /* headings on --good-soft */
+  --on-solid: oklch(0.99 0.006 80);  /* text on solid green */
   --fix: oklch(0.7 0.14 65);         /* adjust; L above 0.6, so dark text on it */
   --fix-lip: oklch(0.54 0.14 65);
   --fix-soft: oklch(0.93 0.05 65);

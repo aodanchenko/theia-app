@@ -11,6 +11,7 @@
 .option { min-height: 64px; padding: 0 20px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule), 0 var(--lip-depth) 0 var(--lip); font-size: var(--text-md); font-weight: 700; text-align: left; touch-action: manipulation; transition: transform 90ms ease-out, box-shadow 90ms ease-out, background-color 90ms ease-out; }
 .option:active { transform: translateY(var(--lip-depth)); box-shadow: 0 0 0 2px var(--rule); }
 .option[aria-pressed="true"] { background: var(--ink); color: var(--bg); box-shadow: 0 var(--lip-depth) 0 var(--ink-lip); }
+@media (prefers-reduced-motion: reduce) { .option { transition: none; } }
 .option:focus-visible, .back:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .skip { display: grid; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--rule); }
 .skip p { font-size: var(--text-md); color: var(--muted); text-wrap: pretty; }

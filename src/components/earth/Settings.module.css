@@ -9,7 +9,7 @@
 .row small { display: block; font-size: calc(var(--text-md) * .85); color: var(--muted); }
 button.row:active { background: var(--rule); } /* not the Language row: pressing its switch shouldn't flash the row */
 .switch { flex: none; position: relative; width: 52px; height: 32px; border-radius: var(--r-tag); background: var(--rule); transition: background-color 150ms ease-out; }
-.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: calc(var(--r-tag) - 2px); background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform 150ms ease-out; }
+.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: calc(var(--r-tag) - 2px); background: var(--on-solid); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform 150ms ease-out; }
 .switch[data-on] { background: var(--good); }
 .switch[data-on]::after { transform: translateX(20px); }
 .more summary { display: flex; align-items: center; min-height: 60px; padding: 0 18px; font-size: var(--text-md); font-weight: 700; cursor: pointer; }

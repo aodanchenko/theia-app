@@ -73,6 +73,7 @@ scripts/                 offline tools (train-squat.ts) and the PWA build plugin
 | `--alert` | flags only | NASA red #fc3b30 | #b4560f |
 | `--cue` | overlay drawn on the camera | NASA red | #f0a24a |
 | `--good` / `--good-band` | normal, within baseline (phosphor green); live skeleton joints | #12803a | #2f7a4b |
+| `--on-solid` | text and knobs on a solid green fill | – | linen white |
 | `--caution` | needs attention, not a health flag: camera errors, framing | amber #b26f00 | – |
 | `--mark` / `--mark-empty` | neutral chart marks | greys | – |
 | `--font-body` | body font | IBM Plex Sans | Atkinson Hyperlegible |

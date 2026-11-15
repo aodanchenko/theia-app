@@ -94,14 +94,13 @@ export default function EarthPage() {
   // The note for right now, in priority order: camera problem → set done → paused → not in view → last rep → start.
   const verdict = reps.length && profile ? judgeRep(reps[reps.length - 1], profile, MODEL, THRESHOLD) : null
   const results: NoteKind[] = walking ? walkWindows.map((w) => (compensationFor(w, who) ? 'fix' : 'good')) : profile ? repResults(reps, profile, MODEL, THRESHOLD) : []
-  const good = results.filter((r) => r === 'good').length
   const lastWalk = walk.windows.slice(-3).reverse().find(assessed) ?? walk.windows.at(-1) // the latest scored second, so one unclear window does not flash the framing hint
   const partial = !!walk.windows.at(-1)?.partial // body cut off right now: no tip and no mark from an older second
   const walkOff = lastWalk && !partial ? compensationFor(lastWalk, who) : null
   const note: { kind: NoteKind; title: string; line: string } =
     camera.error ? { kind: 'idle', title: t.cameraOff, line: t.cameraErrors[camera.errorCode ?? ''] ?? t.cameraErrors.other }
     : camera.status !== 'on' ? { kind: 'idle', title: t.starting, line: t.allowCamera }
-    : done ? { kind: 'done', title: t.setDone, line: walking ? t.walkSummary(good, SET_REPS) : t.setSummary(good, SET_REPS) }
+    : done ? { kind: 'done', title: t.setDone, line: t.restNext }
     : !running ? { kind: 'idle', title: t.paused, line: t.pausedLine }
     : activity === 'away' ? { kind: 'idle', title: t.stepIn, line: t.stepInLine }
     : walking ? (
