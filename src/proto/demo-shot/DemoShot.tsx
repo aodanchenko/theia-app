@@ -57,7 +57,7 @@ export default function DemoShot() {
   return (
     <DeviceFrame t={t}>
       <CoachScreen
-        bar={<CoachBar t={t} results={['learn', 'learn', 'learn', 'good']} total={10} paused={false} onPause={() => {}} onSettings={() => {}} />}
+        bar={<CoachBar t={t} results={['good', 'good', 'good', 'good']} total={10} paused={false} onPause={() => {}} onSettings={() => {}} />}
         camera={
           <div ref={frame} className={cam.frame}>
             <img ref={img} src={photo} alt="" className={cam.layer} style={{ transform: 'none' }} />

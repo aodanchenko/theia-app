@@ -105,7 +105,7 @@ function NextRep() {
 const SAMPLE = [1.25, 1.22, 1.24, 1.24, 0.8, 1.23, 0.85].map((kneeWidth, i) => ({ depth: 98 + (i % 3), kneeWidth, trunkLean: 30, asymmetry: 3 }))
 const PROFILE: EarthProfile = { side: 'right', prosthesis: false, aid: false, position: 'standing', voice: false, bigText: false }
 const Set = () => <SetReport t={t} lang="en" profile={PROFILE} report={setReport(SAMPLE, MODEL, EVAL.personal.threshold, PROFILE)} total={10} />
-const RESULTS: NoteKind[] = repResults(SAMPLE, MODEL, EVAL.personal.threshold)
+const RESULTS: NoteKind[] = repResults(SAMPLE, PROFILE, MODEL, EVAL.personal.threshold)
 
 // 5 · Room: the drawn person from the camera-off view, dimmed, with a pause mark.
 const Room = () => (

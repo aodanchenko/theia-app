@@ -1,6 +1,6 @@
 import type { EarthProfile } from '../../types.ts'
 import type { EarthText, Lang } from '../../earthText.ts'
-import { CALIBRATION, markFor, type setReport } from '../../engine/earthCoach.ts'
+import { markFor, type setReport } from '../../engine/earthCoach.ts'
 import Icon from './Icon.tsx'
 import styles from './SetReport.module.css'
 
@@ -17,8 +17,8 @@ const LANDMARK: Record<number, Joint> = { 11: 'ls', 12: 'rs', 23: 'lh', 24: 'rh'
 // and up to three lines (on target, the fix and its reps, knee bend vs your normal). The figure is drawn standing,
 // so seated and lying sets get the lines only.
 export default function SetReport({ t, lang, profile, report, total }: { t: EarthText; lang: Lang; profile: EarthProfile; report: ReturnType<typeof setReport>; total: number }) {
-  const { learned, scored, good, best, fix, depth } = report
-  const done = learned + scored
+  const { scored, good, best, fix, depth } = report
+  const done = scored
   const marks = fix ? markFor(fix.verdict, profile, lang) : []
   const fixAt = new Set(marks.flatMap((m) => m.joints.map((j) => LANDMARK[j])))
   const tip = (m: (typeof marks)[number]) => {
@@ -50,7 +50,6 @@ export default function SetReport({ t, lang, profile, report, total }: { t: Eart
       )}
       <ul className={styles.lines}>
         {done === 0 && <li>{t.noReps}</li>}
-        {done > 0 && scored === 0 && <li>{t.learning(learned, CALIBRATION)}</li>}
         {scored > 0 && (
           <li data-kind="good"><Icon name="check" size={22} /><span><b>{t.goodCount(good, scored)}</b>{best >= 2 && <small> · {t.bestRun(best)}</small>}</span></li>
         )}

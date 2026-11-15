@@ -10,7 +10,7 @@ export const PROFILE: EarthProfile = { side: 'right', prosthesis: false, aid: tr
 export const TOTAL = 10
 
 const VERDICTS: Verdict[] = [
-  { kind: 'learning', done: 1 }, { kind: 'learning', done: 2 }, { kind: 'learning', done: 3 },
+  { kind: 'good' }, { kind: 'fix', feature: 'asymmetry' }, { kind: 'good' },
   { kind: 'good' }, { kind: 'good' }, { kind: 'fix', feature: 'kneeWidth' }, { kind: 'good' },
   { kind: 'fix', feature: 'trunkLean' }, { kind: 'good' }, { kind: 'good' },
 ]
@@ -120,7 +120,6 @@ export function say(s: DemoState): { kind: Kind; title: string; line: string } {
   if (s.phase === 'away') return { kind: 'idle', title: 'Step into the frame', line: 'Whole body visible, 2–3 steps back.' }
   if (s.phase === 'done') return { kind: 'done', title: 'Set complete', line: `${s.good} of ${TOTAL} reps on target.` }
   if (s.phase !== 'result' || !s.verdict) return { kind: 'idle', title: s.rep ? 'Next rep' : 'Start when ready', line: s.rep ? 'Same as before, nice and slow.' : 'Stand tall, bend your knees, come up slowly.' }
-  if (s.verdict.kind === 'learning') return { kind: 'learn', title: `Rep ${s.rep} · Learning your normal`, line: `${s.rep} of 3. Move the way you usually do.` }
   if (s.verdict.kind === 'good') return { kind: 'good', title: `Rep ${s.rep} · On target`, line: 'Same as your normal.' }
   return { kind: 'fix', title: s.cue.title, line: `Rep ${s.rep} · ${s.cue.hint}.` }
 }

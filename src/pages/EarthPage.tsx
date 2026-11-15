@@ -19,15 +19,16 @@ import useWakeLock from '../capture/useWakeLock.ts'
 import { assessed, compensationFor, compensationJoints, scoredSeconds } from '../engine/gait.ts'
 import Settings from '../components/earth/Settings.tsx'
 import { activityLabel, createActivityTracker, type Activity } from '../engine/activity.ts'
-import { judgeLastRep, markFor, noteFor, repResults, SET_REPS, setReport, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
-import { createRepDetector, fromMediaPipe, MEDIAPIPE_NOISE, MEDIAPIPE_UP, withNoise, type RepFeatures } from '../engine/squat.ts'
-import { EVAL, REHAB_MODEL } from '../engine/squatModel.ts'
+import { judgeRep, markFor, noteFor, repResults, SET_REPS, setReport, soundFor, startHint, type NoteKind } from '../engine/earthCoach.ts'
+import { BASE_MODEL, createRepDetector, fromMediaPipe, MEDIAPIPE_NOISE, MEDIAPIPE_UP, withNoise, type RepFeatures } from '../engine/squat.ts'
+import { EVAL } from '../engine/squatModel.ts'
 import { TEXT, type Lang } from '../earthText.ts'
 import { clearProfile, loadLang, loadProfile, saveLang, saveProfile } from '../store.ts'
 import type { EarthProfile } from '../types.ts'
 
-const MODEL = withNoise(REHAB_MODEL, MEDIAPIPE_NOISE)
-const THRESHOLD = EVAL.personal.threshold
+// The common normal: textbook squat, flag threshold set on UI-PRMD at 10% false alerts (people held out).
+const MODEL = withNoise(BASE_MODEL, MEDIAPIPE_NOISE)
+const THRESHOLD = EVAL.base.threshold
 
 type Screen = 'about' | 'place' | 'live' | 'settings'
 
@@ -91,8 +92,8 @@ export default function EarthPage() {
   }
 
   // The note for right now, in priority order: camera problem → set done → paused → not in view → last rep → start.
-  const verdict = reps.length ? judgeLastRep(reps, MODEL, THRESHOLD) : null
-  const results: NoteKind[] = walking ? walkWindows.map((w) => (compensationFor(w, who) ? 'fix' : 'good')) : repResults(reps, MODEL, THRESHOLD)
+  const verdict = reps.length && profile ? judgeRep(reps[reps.length - 1], profile, MODEL, THRESHOLD) : null
+  const results: NoteKind[] = walking ? walkWindows.map((w) => (compensationFor(w, who) ? 'fix' : 'good')) : profile ? repResults(reps, profile, MODEL, THRESHOLD) : []
   const good = results.filter((r) => r === 'good').length
   const lastWalk = walk.windows.slice(-3).reverse().find(assessed) ?? walk.windows.at(-1) // the latest scored second, so one unclear window does not flash the framing hint
   const walkOff = lastWalk ? compensationFor(lastWalk, who) : null

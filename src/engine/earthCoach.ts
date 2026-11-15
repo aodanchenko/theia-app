@@ -2,16 +2,18 @@
 // Plain TS, runs in Node.
 import { TEXT, type Lang } from '../earthText.ts'
 import type { EarthProfile } from '../types.ts'
-import { meanFeatures, scoreRep, type FeatureKey, type RepFeatures, type SquatModel } from './squat.ts'
+import { FEATURES, meanFeatures, scoreRep, type FeatureKey, type RepFeatures, type SquatModel } from './squat.ts'
 
-export const CALIBRATION = 3 // first reps of a session = the person's normal
+export type Verdict = { kind: 'good' } | { kind: 'fix'; feature: FeatureKey }
 
-export type Verdict = { kind: 'learning'; done: number } | { kind: 'good' } | { kind: 'fix'; feature: FeatureKey }
-
-export function judgeLastRep(reps: RepFeatures[], model: SquatModel, threshold: number): Verdict {
-  if (reps.length <= CALIBRATION) return { kind: 'learning', done: reps.length }
-  const r = scoreRep(reps[reps.length - 1], model, meanFeatures(reps.slice(0, CALIBRATION)))
-  return r.score > threshold ? { kind: 'fix', feature: r.worst } : { kind: 'good' }
+// Each rep against the common normal (`model` = the textbook squat; no personal baseline, so a compensation the person
+// already has is still caught). Depth is not judged with a prosthesis or seated / lying: their range is their own, and
+// About you promises not to push them deeper.
+export function judgeRep(f: RepFeatures, p: EarthProfile, model: SquatModel, threshold: number): Verdict {
+  const { z } = scoreRep(f, model)
+  const judged = FEATURES.filter((k) => k !== 'depth' || (p.position === 'standing' && !p.prosthesis))
+  const worst = judged.reduce((a, b) => (z[b] > z[a] ? b : a))
+  return z[worst] > threshold ? { kind: 'fix', feature: worst } : { kind: 'good' }
 }
 
 const sideWord = (p: EarthProfile) => (p.side === 'left' || p.side === 'right' ? p.side : null)
@@ -19,7 +21,6 @@ const sideWord = (p: EarthProfile) => (p.side === 'left' || p.side === 'right' ?
 // One short instruction + a hint, spoken as-is when voice is on.
 export function cueFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { title: string; hint: string } {
   const t = TEXT[lang], side = sideWord(p)
-  if (v.kind === 'learning') return { title: t.keepGoing, hint: t.learning(v.done, CALIBRATION) }
   if (v.kind === 'good') return { title: t.goodRep, hint: t.likeNormal }
   return {
     depth: { title: p.position === 'standing' ? t.deeper : t.slower, hint: t.steady },
@@ -41,32 +42,27 @@ export const SET_REPS = 10
 export const STREAK = 5 // on-target reps in a row that earn the streak sound
 
 // Which feedback sound a just-finished rep gets, from all results so far.
-export function soundFor(results: NoteKind[]): 'good' | 'fix' | 'baseline' | 'streak' | 'done' | null {
+export function soundFor(results: NoteKind[]): 'good' | 'fix' | 'streak' | 'done' | null {
   const n = results.length
   if (n === 0) return null
   if (n >= SET_REPS) return 'done'
   const last = results[n - 1]
-  if (last === 'learn') return n === CALIBRATION ? 'baseline' : null
   if (last === 'fix') return 'fix'
   let run = 0
   for (let k = n - 1; k >= 0 && results[k] === 'good'; k--) run++
   return run > 0 && run % STREAK === 0 ? 'streak' : 'good'
 }
 
-export type NoteKind = 'idle' | 'learn' | 'good' | 'fix' | 'done'
+export type NoteKind = 'idle' | 'good' | 'fix' | 'done'
 
 // The result of each rep so far, for the segmented bar and the summary.
-export function repResults(reps: RepFeatures[], model: SquatModel, threshold: number): NoteKind[] {
-  return reps.map((_, i) => {
-    const v = judgeLastRep(reps.slice(0, i + 1), model, threshold)
-    return v.kind === 'learning' ? 'learn' : v.kind
-  })
+export function repResults(reps: RepFeatures[], p: EarthProfile, model: SquatModel, threshold: number): NoteKind[] {
+  return reps.map((f) => judgeRep(f, p, model, threshold).kind)
 }
 
 // The note under the camera after a rep, in an instructor's plain words.
 export function noteFor(v: Verdict, rep: number, p: EarthProfile, lang: Lang = 'en'): { kind: NoteKind; title: string; line: string } {
   const t = TEXT[lang]
-  if (v.kind === 'learning') return { kind: 'learn', title: `${t.rep(rep)} · ${t.learningNormal}`, line: t.learningLine(v.done, CALIBRATION) }
   if (v.kind === 'good') return { kind: 'good', title: `${t.rep(rep)} · ${t.onTarget}`, line: t.sameAsNormal }
   const c = cueFor(v, p, lang)
   return { kind: 'fix', title: c.title, line: `${t.rep(rep)} · ${c.hint}.` }
@@ -77,7 +73,6 @@ export function noteFor(v: Verdict, rep: number, p: EarthProfile, lang: Lang = '
 export function markFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { joints: number[]; label: string; arrow: 'left' | 'right' | 'up' | 'down' | null }[] {
   const t = TEXT[lang]
   if (v.kind === 'good') return [{ joints: [23, 24], label: t.onTarget, arrow: null }]
-  if (v.kind !== 'fix') return []
   const knee = (side: 'left' | 'right') => ({ joints: [side === 'left' ? 25 : 26], label: t.markKnee, arrow: side === 'left' ? 'left' as const : 'right' as const })
   const sides = p.side === 'left' || p.side === 'right' ? [p.side] : (['left', 'right'] as const)
   return {
@@ -89,18 +84,17 @@ export function markFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { joint
 }
 
 // Feedback on the set so far, shown while paused and when the set is done: how many reps were on target, the best run,
-// the fix that came up most (with the reps it came up on), and knee bend against the person's own normal.
+// the fix that came up most (with the reps it came up on), and knee bend against the common normal.
 export function setReport(reps: RepFeatures[], model: SquatModel, threshold: number, p: EarthProfile, lang: Lang = 'en') {
-  const results = repResults(reps, model, threshold)
-  const scored = results.filter((r) => r !== 'learn').length
+  const results = repResults(reps, p, model, threshold)
+  const scored = results.length
   const good = results.filter((r) => r === 'good').length
   let best = 0, run = 0
   for (const r of results) { run = r === 'good' ? run + 1 : 0; best = Math.max(best, run) }
-  const fixes = reps.flatMap((_, i) => { const v = judgeLastRep(reps.slice(0, i + 1), model, threshold); return v.kind === 'fix' ? [{ v, rep: i + 1 }] : [] })
+  const fixes = reps.flatMap((f, i) => { const v = judgeRep(f, p, model, threshold); return v.kind === 'fix' ? [{ v, rep: i + 1 }] : [] })
   const repsOf = (f: FeatureKey) => fixes.filter((x) => x.v.feature === f).map((x) => x.rep)
   const top = fixes.reduce<(typeof fixes)[number] | null>((a, x) => (!a || repsOf(x.v.feature).length >= repsOf(a.v.feature).length ? x : a), null) // ties: the latest
   const fix = top ? { verdict: top.v, title: cueFor(top.v, p, lang).title, reps: repsOf(top.v.feature) } : null
-  const after = reps.slice(CALIBRATION)
-  const depth = after.length ? { now: Math.round(meanFeatures(after).depth), normal: Math.round(meanFeatures(reps.slice(0, CALIBRATION)).depth) } : null
-  return { learned: Math.min(reps.length, CALIBRATION), scored, good, best, fix, depth }
+  const depth = reps.length ? { now: Math.round(meanFeatures(reps).depth), normal: Math.round(model.depth.mean) } : null
+  return { scored, good, best, fix, depth }
 }
