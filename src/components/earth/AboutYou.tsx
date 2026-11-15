@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { TEXT, type Lang, type EarthText } from '../../earthText.ts'
 import type { EarthProfile } from '../../types.ts'
+import ChunkyButton from './ChunkyButton.tsx'
 import LangSwitch from './LangSwitch.tsx'
 import styles from './AboutYou.module.css'
 
@@ -9,7 +10,7 @@ type Question = { key: Key; q: string; why: string; options: [EarthProfile[Key],
 const questions = (t: EarthText): Question[] => {
   const Q = t.questions, yesNo: [boolean, string][] = [[true, t.yes], [false, t.no]]
   return [
-    { key: 'side', ...Q.side, options: Object.entries(Q.side.options) as [EarthProfile['side'], string][] },
+    { key: 'side', ...Q.side, options: (Object.entries(Q.side.options) as [EarthProfile['side'], string][]).filter(([v]) => v !== 'unsure') },
     { key: 'prosthesis', ...Q.prosthesis, options: yesNo },
     { key: 'aid', ...Q.aid, options: yesNo },
     { key: 'position', ...Q.position, options: Object.entries(Q.position.options) as [EarthProfile['position'], string][] },
@@ -18,8 +19,11 @@ const questions = (t: EarthText): Question[] => {
   ]
 }
 
+// Skipping the questions: the most accessible setup (spoken tips, big text, no side named), all changeable in Settings.
+const QUICK: EarthProfile = { side: 'unsure', prosthesis: false, aid: false, position: 'standing', voice: true, bigText: true }
+
 // "About you": one question per screen, tap only. Tapping an answer moves on; the last one saves. The language switch sits on the first screen.
-export default function AboutYou({ lang, onLang, initial, onDone, onCancel }: { lang: Lang; onLang: (l: Lang) => void; initial?: EarthProfile | null; onDone: (p: EarthProfile) => void; onCancel?: () => void }) {
+export default function AboutYou({ lang, onLang, initial, onDone, onSkip, onCancel }: { lang: Lang; onLang: (l: Lang) => void; initial?: EarthProfile | null; onDone: (p: EarthProfile) => void; onSkip?: (p: EarthProfile) => void; onCancel?: () => void }) {
   const t = TEXT[lang], QUESTIONS = questions(t)
   const [i, setI] = useState(0)
   const [answers, setAnswers] = useState<Partial<EarthProfile>>(initial ?? {})
@@ -48,6 +52,12 @@ export default function AboutYou({ lang, onLang, initial, onDone, onCancel }: { 
           <button key={label} type="button" className={styles.option} aria-pressed={answers[q.key] === value} onClick={() => pick(value)}>{label}</button>
         ))}
       </div>
+      {i === 0 && onSkip && (
+        <div className={styles.skip}>
+          <ChunkyButton tone="good" onClick={() => onSkip(QUICK)}>{t.skipAll} →</ChunkyButton>
+          <p>{t.skipWhy}</p>
+        </div>
+      )}
     </div>
   )
 }

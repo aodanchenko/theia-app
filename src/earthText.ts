@@ -22,6 +22,8 @@ const en = {
   cancel: 'Cancel',
   question: (i: number, n: number) => `Question ${i} of ${n}`,
   intro: 'About you · 6 quick taps',
+  skipAll: 'Skip · start now',
+  skipWhy: 'Tips are spoken and the text is big. Change it any time in Settings.',
   // Frame
   phonesOnly: 'Theia Earth is made for phones. Open this page on your phone to use the camera.',
   upright: 'Turn your device upright',
@@ -168,6 +170,8 @@ const uk: EarthText = {
   cancel: 'Скасувати',
   question: (i, n) => `Питання ${i} з ${n}`,
   intro: 'Про вас · 6 коротких питань',
+  skipAll: 'Пропустити · почати',
+  skipWhy: 'Підказки озвучуються, текст великий. Це можна змінити в Налаштуваннях.',
   phonesOnly: 'Theia Earth створено для телефонів. Відкрийте цю сторінку на телефоні, щоб користуватися камерою.',
   upright: 'Поверніть пристрій вертикально',
   uprightWhy: 'Тренер працює вертикально: ви, камера й одна підказка за раз.',

@@ -1,4 +1,4 @@
-.note { flex: none; padding: 14px 16px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule); }
+.note { flex: none; min-height: calc(28px + var(--text-lg) * 1.08 * 2 + 4px + var(--text-md) * 1.3 * 2); padding: 14px 16px; border-radius: var(--r-card); background: var(--surface); box-shadow: 0 0 0 2px var(--rule); }
 .note[data-kind="good"], .note[data-kind="done"] { background: var(--good-soft); box-shadow: none; }
 .note[data-kind="fix"] { background: var(--fix-soft); box-shadow: none; }
 .title { font-size: var(--text-lg); font-weight: 700; line-height: 1.08; letter-spacing: -.01em; text-wrap: balance; }

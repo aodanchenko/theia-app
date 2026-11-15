@@ -153,6 +153,7 @@ export default function EarthPage() {
         initial={editing ? profile : null}
         onCancel={editing ? () => { setEditing(false); setScreen('settings') } : undefined}
         onDone={(p) => { save(p); setScreen(editing ? 'settings' : 'place'); setEditing(false) }}
+        onSkip={editing ? undefined : (p) => { save(p); setScreen('live') }}
       />
     )
   } else if (screen === 'settings') {

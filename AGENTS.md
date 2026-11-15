@@ -141,13 +141,13 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `DeviceFrame` | children | Earth's shell (CSS only): laptop/desktop (mouse) → phone frame with notch and a "made for phones" caption; touch devices → full screen, portrait only (sideways shows "Turn your device upright"). Sets `--inset-top` so content clears the notch |
 | `CoachScreen` | `bar`, `camera`, `note`, `action` (nodes) | Camera home layout: bar, framed camera, one note, one action; fills `DeviceFrame` |
 | `CoachBar` | `results[]`, `total`, `paused`, `onPause`, `onSettings` | Pause/resume, one segment per rep coloured by result, count in Plex, settings |
-| `NoteCard` | `kind`, `title`, `line` | The one instruction; tinted by result (`good`/`fix`/`done`), words carry the meaning |
+| `NoteCard` | `kind`, `title`, `line` | The one instruction; tinted by result (`good`/`fix`/`done`), words carry the meaning. Fixed height (2 title + 2 text lines), so the camera above never resizes when the tip changes |
 | `ChunkyButton` | `onClick`, `tone?`, `disabled?`, children | Full-width primary action with the solid lip; one per screen |
 | `ExerciseSwitch` | `t`, `value`, `onChange` | Squat / Walk above the camera; switching starts a new set |
 | `WalkReport` | `t`, `windows[]`, `total` | Walking's set report (paused or done): seconds steady, regions off typical and how often, the experimental note. Uses SetReport's card styles |
 | `LangSwitch` | `lang`, `label`, `onChange` | EN / УКР segmented switch; each button named in its own language |
 | `Icon` | `name`, `size` | Earth's single icon set (2.2 stroke, round). No emoji |
-| `AboutYou` | `initial?`, `onDone`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing/lying, voice, bigger text |
+| `AboutYou` | `initial?`, `onDone`, `onSkip?`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing/lying, voice, bigger text. The first screen has a green **Skip · start now**: straight to the camera with the most accessible setup (spoken tips, big text, no side named) |
 | `PlacePhone` | `camera`, `seen`, `error`, `onRetry`, `onDone` | Optional setup: hip height, 2–3 steps; frame turns green with "I can see you" |
 | `EarthCamera` | `stream`, `onPose`, `label?`, `away?`, `marks[]` | The camera framed inside the page: mirrored video + skeleton, activity label, dashed "stand here" outline, marks placed on the real joints (maps video coords through the cover crop and mirror) |
 | `SetReport` | `t`, `lang`, `profile`, `report`, `total` | In the camera's place while paused or when the set is done (`setReport` in earthCoach.ts): a standing figure with the most common fix marked on the joint, then on target n of n (best run), that fix and its reps, knee bend vs your normal. Seated/lying sets get the lines only. Picked from 5 paused-screen prototypes (`/proto/paused`) |

@@ -12,3 +12,5 @@
 .option:active { transform: translateY(var(--lip-depth)); box-shadow: 0 0 0 2px var(--rule); }
 .option[aria-pressed="true"] { background: var(--ink); color: var(--bg); box-shadow: 0 var(--lip-depth) 0 var(--ink-lip); }
 .option:focus-visible, .back:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.skip { display: grid; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--rule); }
+.skip p { font-size: var(--text-md); color: var(--muted); text-wrap: pretty; }
