@@ -12,7 +12,7 @@
 
 Our project for the **NASA Space Apps Challenge 2026** (Vienna), challenge **"Health Monitoring Software for Astronauts"**.
 
-![Theia Workbench: the astronaut's squat on ARED with joint angles, the recommendation "Knees out", the parameter table, form drift per rep, vitals and the weekly squat dose](docs/space-workbench.png)
+![Theia Workbench: the astronaut's squat on ARED with joint angles, the recommendation "Knees out", the parameter table, form drift per rep, vitals and the weekly squat dose](docs/space-workbench-tablet.png)
 
 ## What it does
 
