@@ -1,12 +1,14 @@
 import type { Parameter } from '../../types.ts'
 import styles from './ParameterSheet.module.css'
 
-// Movement parameters: this rep vs correct form and vs the personal baseline.
-export default function ParameterSheet({ rows }: { rows: Parameter[] }) {
+const HEADS = ['Parameter', 'Now', 'Correct', 'Your base', 'Flag']
+
+// Movement parameters: this rep vs correct form and vs the personal baseline (walking passes its own column names).
+export default function ParameterSheet({ rows, heads = HEADS }: { rows: Parameter[]; heads?: string[] }) {
   return (
     <table className={`enter ${styles.sheet}`}>
       <thead>
-        <tr><th scope="col">Parameter</th><th scope="col" className={styles.num}>Now</th><th scope="col" className={styles.num}>Correct</th><th scope="col" className={styles.num}>Your base</th><th scope="col">Flag</th></tr>
+        <tr>{heads.map((h, i) => <th key={h || i} scope="col" className={i > 0 && i < 4 ? styles.num : undefined}>{h}</th>)}</tr>
       </thead>
       <tbody>
         {rows.map((row) => (

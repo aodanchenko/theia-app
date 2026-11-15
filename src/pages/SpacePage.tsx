@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Landmark } from '@mediapipe/tasks-vision'
+import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision'
 import { playChime } from '../capture/chimes.ts'
 import useCameraStream from '../capture/useCameraStream.ts'
+import useWalk from '../capture/useWalk.ts'
 import useSimVitals from '../data/useSimVitals.ts'
 import SimulatedCamera from '../components/SimulatedCamera.tsx'
 import CameraPanel from '../components/space/CameraPanel.tsx'
@@ -22,6 +23,7 @@ import Workbench from '../components/space/Workbench.tsx'
 import { DEMO_REPS, OVERLAY_TAGS, SESSION, WEEK } from '../data/demo.ts'
 import { createRepDetector, CUES, FEATURES, fromMediaPipe, kneeFlexion, LABELS, MEDIAPIPE_NOISE, MEDIAPIPE_UP, meanFeatures, repsCsv, scoreRep, SHORT, withNoise, formLimitText, formMiss, pastForm, type FeatureKey, type RepFeatures } from '../engine/squat.ts'
 import { EVAL, IDEAL, REHAB_MODEL } from '../engine/squatModel.ts'
+import { assessed, FEATURES as GAIT_FEATURES, REGIONS, scoredSeconds, UNITS, worstRegion, type WalkWindow } from '../engine/gait.ts'
 import type { Parameter } from '../types.ts'
 
 const s = SESSION
@@ -98,6 +100,34 @@ function recommend(live: ReturnType<typeof liveView> | null, n: number, tracking
 
 const DEMO_REC = recommend(DEMO_VIEW, DEMO_REPS.length, null)
 
+// Walking windows → what the workbench shows. EXPERIMENTAL: the gait package's models were developed on Sapiens2 poses.
+const REGION_TITLE = { trunk: 'Trunk', hips: 'Pelvis / hips', shoulders: 'Shoulders', left_knee: 'Left knee / leg', right_knee: 'Right knee / leg', left_arm: 'Left arm', right_arm: 'Right arm' }
+const WALK_HEADS = ['Region', 'Now', 'Typical', 'Rank', 'Flag']
+const CRITERIA_HEADS = ['Model criterion', 'Predicted', '', 'Score', 'Flag']
+const WALK_BASIS = 'EXPERIMENTAL · Theia gait models (regional density + TCN), developed on Sapiens2 poses, not validated on MediaPipe · reference = walking on the ground'
+function walkView(windows: WalkWindow[], cameraOn: boolean): { rows: Parameter[]; criteria: Parameter[]; seconds: number; flags: number; state: string; rec: { decision: string; action: string; reason: string; next?: string; tone: Tone } } {
+  const done = scoredSeconds(windows), last = windows.slice(-3).reverse().find(assessed) ?? windows.at(-1), off = last ? worstRegion(last) : null
+  const rows: Parameter[] = REGIONS.map((region) => {
+    const r = last?.regions.find((x) => x.region === region)
+    if (!r?.top || r.state === 'unavailable') return { name: REGION_TITLE[region], now: '—', correct: '—', base: '—' }
+    const u = UNITS[r.top.feature], more = r.top.value > r.top.median
+    return { name: REGION_TITLE[region], now: `${Math.round(r.top.value)}${u}`, correct: `${Math.round(r.top.p05)}–${Math.round(r.top.p95)}${u}`, base: `P${Math.round(r.percentile ?? 0)}`,
+      ...(r.state === 'deviation' ? { flag: `${more ? 'more' : 'less'} ${['angle', 'range', 'variability', 'speed'][r.top.feature]}`, tone: 'caution' as const } : {}) }
+  })
+  const criteria: Parameter[] = (last?.criteria ?? []).filter((c) => c.state !== 'unavailable').map((c) => ({
+    name: c.label.replace(/\s*\(.*\)|;.*/g, ''), now: `${c.value?.toFixed(1)} ${c.unit}`, correct: '', base: c.score?.toFixed(2) ?? '—',
+    ...(c.state === 'deviation' ? { flag: c.id.endsWith('_low') ? 'low' : 'high', tone: 'caution' as const } : {}),
+  }))
+  const flags = done.filter((w) => worstRegion(w)).length
+  const rec = !cameraOn ? { decision: 'Walk', action: 'Enable camera, then walk', reason: 'Side-on to the camera, or towards it and back · scored in 1 s windows', tone: 'neutral' as Tone }
+    : !last ? { decision: 'Ready', action: 'Start walking', reason: 'Whole body in view, side-on or facing the camera', tone: 'neutral' as Tone }
+    : !last.view ? { decision: 'Framing', action: 'Walk side-on or face the camera', reason: 'The models need a side or front/rear view', tone: 'caution' as Tone }
+    : off ? { decision: 'Check gait', action: `${REGION_TITLE[off.region]}: ${off.more ? 'more' : 'less'} than typical`, reason: `${GAIT_FEATURES[off.top.feature]} ${Math.round(off.top.value)}${UNITS[off.top.feature]}, typical ${Math.round(off.top.p05)}–${Math.round(off.top.p95)} · rank P${Math.round(off.percentile ?? 0)} of reference walks`, tone: 'caution' as Tone }
+    : assessed(last) ? { decision: 'Continue', action: 'Steady walking', reason: 'Every measured region within typical walking', tone: 'good' as Tone }
+    : { decision: 'Framing', action: 'Show the whole body', reason: 'Too few reliable joints in the last second', tone: 'caution' as Tone }
+  return { rows, criteria, seconds: done.length, flags, state: !last ? 'WALK TO START' : off ? 'CHECK GAIT' : last.view ? `VIEW ${last.view.replace('_', '/').toUpperCase()}` : 'VIEW UNKNOWN', rec }
+}
+
 // Saves text as a file on the device (nothing is uploaded).
 function download(name: string, text: string) {
   const a = document.createElement('a')
@@ -116,13 +146,17 @@ export default function SpacePage() {
   const toggle = (k: keyof typeof view) => () => setView((v) => ({ ...v, [k]: !v[k] }))
   const [help, setHelp] = useState<HelpTopic | null>(null)
   const [tracking, setTracking] = useState<string | null>(null) // null until the pose model sees someone
-  const onPose = useCallback((world: Landmark[]) => {
+  const [exercise, setExercise] = useState<'squat' | 'walk'>('squat')
+  const walking = exercise === 'walk'
+  const walk = useWalk(walking && camera.status === 'on')
+  const onPose = useCallback((world: Landmark[], image: NormalizedLandmark[], width: number, height: number) => {
+    if (walking) return walk.feed(image, width, height)
     const sk = fromMediaPipe(world)
     if (!sk) return setTracking('LEGS NOT VISIBLE · STEP BACK')
     detect(sk)
     const f = kneeFlexion(sk)
     setTracking(`KNEE ${Math.round((f.left + f.right) / 10) * 5}°`) // 5° steps, so the page re-renders only on change
-  }, [detect])
+  }, [detect, walking, walk])
   const live = reps.length > 0 ? liveView(reps) : null
   const shown = live ?? DEMO_VIEW
   const vitals = useSimVitals(camera.status === 'on', reps.length)
@@ -140,8 +174,9 @@ export default function SpacePage() {
     if (flaggedNow) streak.current = 0
     if (view.sounds) playChime(chime)
   }, [reps.length, flaggedNow, view.sounds])
-  const rec = live || tracking ? recommend(live, reps.length, tracking) : DEMO_REC
-  const basis = live
+  const gait = walking ? walkView(walk.windows, camera.status === 'on') : null
+  const rec = gait ? gait.rec : live || tracking ? recommend(live, reps.length, tracking) : DEMO_REC
+  const basis = gait ? WALK_BASIS : live
     ? `Baseline = your first ${CALIBRATION} reps · known cause: ${s.knownCause}`
     : `SIMULATED reps 1–${DEMO_REPS.length - 1} · rep ${DEMO_REPS.length} = the photo, measured by MediaPipe · baseline = first ${CALIBRATION} reps`
 
@@ -151,6 +186,10 @@ export default function SpacePage() {
     <Workbench
       header={
         <Header title="THEIA Workbench" file={s.file}>
+          <Menu label="Exercise" items={[
+            { label: 'Squat (ARED)', checked: !walking, onSelect: () => setExercise('squat') },
+            { label: 'Walk (experimental)', checked: walking, onSelect: () => { walk.reset(); setExercise('walk') } },
+          ]} />
           <Menu label="View" items={[
             { label: 'Joint tags (simulated view)', checked: view.tags, onSelect: toggle('tags') },
             { label: 'Rep chart', checked: view.chart, onSelect: toggle('chart') },
@@ -169,8 +208,10 @@ export default function SpacePage() {
             {camera.status === 'on'
               ? <ToolButton onClick={camera.stop}>■ Stop camera</ToolButton>
               : <ToolButton camera onClick={camera.start} disabled={camera.status === 'starting'}>{camera.status === 'starting' ? 'Starting…' : '● Enable camera'}</ToolButton>}
-            <ToolButton onClick={() => { setReps([]); setDetect(newDetector) }} disabled={reps.length === 0}>↺ Reset baseline</ToolButton>
-            <ToolButton onClick={() => download(`theia-reps-${new Date().toISOString().slice(0, 16).replace(':', '-')}.csv`, repsCsv(reps, CALIBRATION, LIVE_MODEL, THRESHOLD))} disabled={reps.length === 0}>⤓ Export CSV</ToolButton>
+            {walking
+              ? <ToolButton onClick={walk.reset} disabled={walk.windows.length === 0}>↺ Reset walk</ToolButton>
+              : <ToolButton onClick={() => { setReps([]); setDetect(newDetector) }} disabled={reps.length === 0}>↺ Reset baseline</ToolButton>}
+            <ToolButton onClick={() => download(`theia-reps-${new Date().toISOString().slice(0, 16).replace(':', '-')}.csv`, repsCsv(reps, CALIBRATION, LIVE_MODEL, THRESHOLD))} disabled={walking || reps.length === 0}>⤓ Export CSV</ToolButton>
           </ToolGroup>
           {camera.error && <ToolNote caution>{camera.error}</ToolNote>}
         </Toolbar>
@@ -178,7 +219,7 @@ export default function SpacePage() {
       camera={
         <CameraPanel
           stream={camera.stream}
-          caption={live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`DEMO · REP ${DEMO_REPS.length} · ${DEMO_VIEW.state}`, 'PHOTO · NASA S133-E-008323']}
+          caption={gait ? [`WALK · ${gait.seconds} S SCORED · ${gait.state}`, 'MODEL EXPERIMENTAL'] : live || tracking ? [`REP ${reps.length} · ${live?.state ?? 'SQUAT TO START'}`, tracking ?? ''] : [`DEMO · REP ${DEMO_REPS.length} · ${DEMO_VIEW.state}`, 'PHOTO · NASA S133-E-008323']}
           onPose={onPose}
         >
           {(cam) => (cam ? null : <SimulatedCamera theme="space" width={420} height={548} scene tags={view.tags ? OVERLAY_TAGS : []} ruler={view.tags} />)}
@@ -187,8 +228,13 @@ export default function SpacePage() {
       side={
         <>
           <Recommendation {...rec} basis={basis} id={`${reps.length}-${rec.decision}`} />
-          <ParameterSheet rows={shown.rows} />
-          {view.chart && (
+          {gait
+            ? <>
+              <ParameterSheet rows={gait.rows} heads={WALK_HEADS} />
+              {gait.criteria.length > 0 && <ParameterSheet rows={gait.criteria} heads={CRITERIA_HEADS} />}
+            </>
+            : <ParameterSheet rows={shown.rows} />}
+          {!gait && view.chart && (
             <Panel title={`Form drift by rep · ${live ? 'live' : 'demo'}`} note={live ? `first ${CALIBRATION} reps = baseline` : `SIMULATED · rep ${DEMO_REPS.length} = photo`} delay={90} grow>
               <DriftChart points={shown.points} total={Math.max(10, shown.points.length)} label="Form drift per rep: worst deviation from the baseline, 1.0 = flag" />
             </Panel>
@@ -198,9 +244,9 @@ export default function SpacePage() {
             <VitalsGrid vitals={vitals} />
           </Panel>
           )}
-          <Panel title="This week · squat dose" note="SIMULATED prescription" delay={120}>
+          {!gait && <Panel title="This week · squat dose" note="SIMULATED prescription" delay={120}>
             <WeekDose done={WEEK.before + shown.goodReps} target={WEEK.target} set={shown.goodReps} setTotal={live ? reps.length : DEMO_REPS.length} bestRun={shown.bestRun} />
-          </Panel>
+          </Panel>}
           <HelpDialog topic={help} onClose={() => setHelp(null)} calibration={CALIBRATION} threshold={THRESHOLD}>
             {/* the evidence lives here, not on the rack screen: it is for the curious crew member, the ground team and judges */}
             <ModelCheck
@@ -217,7 +263,9 @@ export default function SpacePage() {
       }
       status={
         <StatusBar
-          items={live
+          items={gait
+            ? ['WALK', `${gait.seconds} S SCORED`, `FLAGS ${gait.flags}`, 'GAIT MODEL EXPERIMENTAL']
+            : live
             ? [`REP ${reps.length}`, `LOAD ${s.loadKg} KG`, live.baseline ? `FLAGS ${live.flags}` : `CALIBRATING ${reps.length}/${CALIBRATION}`, `WEEK ${WEEK.before + live.goodReps}/${WEEK.target}`]
             : [`REP ${DEMO_REPS.length}`, `FLAGS ${DEMO_VIEW.flags}`, `WEEK ${WEEK.before + DEMO_VIEW.goodReps}/${WEEK.target}`, 'DEMO · SIMULATED', `MD ${s.missionDay}`]}
           next={`Next: ${rec.action.toLowerCase()}${rec.next ? ` · ${rec.next.toLowerCase()}` : ''}`}

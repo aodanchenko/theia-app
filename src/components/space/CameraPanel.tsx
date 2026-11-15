@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import type { Landmark } from '@mediapipe/tasks-vision'
+import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision'
 import usePose from '../../capture/usePose.ts'
 import styles from './CameraPanel.module.css'
 
@@ -8,7 +8,7 @@ import styles from './CameraPanel.module.css'
 interface Props {
   stream: MediaStream | null
   caption: string[]
-  onPose: (world: Landmark[]) => void
+  onPose: (world: Landmark[], image: NormalizedLandmark[], width: number, height: number) => void
   children: (live: boolean) => ReactNode
 }
 

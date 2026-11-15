@@ -16,7 +16,7 @@ export default function usePose(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   enabled: boolean,
-  onPose: (world: Landmark[], image: NormalizedLandmark[]) => void,
+  onPose: (world: Landmark[], image: NormalizedLandmark[], width: number, height: number) => void,
   model: 'full' | 'heavy' = 'full',
 ) {
   const [result, setResult] = useState<'running' | 'error' | null>(null)
@@ -55,7 +55,7 @@ export default function usePose(
         const landmarks = smoothImage(result.landmarks[0], now)
         draw.drawConnectors(landmarks, BODY_CONNECTIONS, { color: '#ffffff', lineWidth: 3 })
         draw.drawLandmarks(landmarks.slice(11), { color: joint, radius: 4 })
-        onPoseRef.current(smoothWorld(result.worldLandmarks[0], now), landmarks)
+        onPoseRef.current(smoothWorld(result.worldLandmarks[0], now), landmarks, video.videoWidth, video.videoHeight)
       }
       loop()
       setResult('running')

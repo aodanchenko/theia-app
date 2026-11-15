@@ -10,7 +10,7 @@ export interface BodyMark { x: number; y: number; label: string; arrow: IconName
 // a "stand here" outline when nobody is in view, and marks placed on the body. Video stays on the device.
 export default function EarthCamera({ stream, onPose, label, away, marks = [] }: {
   stream: MediaStream | null
-  onPose: (world: Landmark[], image: NormalizedLandmark[]) => void
+  onPose: (world: Landmark[], image: NormalizedLandmark[], width: number, height: number) => void
   label?: string
   away?: boolean
   marks?: BodyMark[]
