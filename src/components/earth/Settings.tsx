@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import type { EarthText, Lang } from '../../earthText.ts'
 import type { EarthProfile } from '../../types.ts'
+import { canPrompt, installed, isIPhone, promptInstall } from '../../capture/install.ts'
 import LangSwitch from './LangSwitch.tsx'
 import styles from './Settings.module.css'
 
-// Settings: About you, language, voice, text size, phone placement, help, about, start over.
+// Settings: About you, language, voice, text size, phone placement, help, add to home screen, about, start over.
 export default function Settings({ t, lang, onLang, profile, onChange, onEditAbout, onPlace, onReset, onClose }: {
   t: EarthText
   lang: Lang
@@ -40,6 +41,15 @@ export default function Settings({ t, lang, onLang, profile, onChange, onEditAbo
           <p>{t.help112[0]}<a href="tel:112">112</a>{t.help112[1]}</p>
           <p>{t.notAdvice}</p>
         </details>
+        {!installed() && (
+          <details className={styles.more}>
+            <summary>{t.install}</summary>
+            <p>{t.installWhy}</p>
+            {canPrompt()
+              ? <p><button type="button" className={styles.install} onClick={() => void promptInstall()}>{t.installNow}</button></p>
+              : <p>{isIPhone() ? t.installIPhone : t.installAndroid}</p>}
+          </details>
+        )}
         <details className={styles.more}>
           <summary>{t.aboutTheia}</summary>
           <p>{t.aboutHow}</p>

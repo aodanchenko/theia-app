@@ -15,6 +15,7 @@ import SetReport from '../components/earth/SetReport.tsx'
 import ExerciseSwitch, { type Exercise } from '../components/earth/ExerciseSwitch.tsx'
 import WalkReport from '../components/earth/WalkReport.tsx'
 import useWalk from '../capture/useWalk.ts'
+import useWakeLock from '../capture/useWakeLock.ts'
 import { assessed, scoredSeconds, UNITS, worstRegion, type Region } from '../engine/gait.ts'
 import Settings from '../components/earth/Settings.tsx'
 import { activityLabel, createActivityTracker, type Activity } from '../engine/activity.ts'
@@ -80,6 +81,7 @@ export default function EarthPage() {
   useEffect(() => { if (walking) setRepPose(lastImage.current) }, [walking, walk.windows.length]) // walking marks sit where the body was at the last window
 
   const done = (walking ? walkWindows.length : reps.length) >= SET_REPS
+  useWakeLock(camera.status === 'on' && running && !done)
   const restart = () => { setReps([]); setRepPose(null); detector.current = null; walk.reset(); setRunning(true); stopSpeaking() }
   const changeExercise = (e: Exercise) => { setExercise(e); restart() }
   const toggle = () => {

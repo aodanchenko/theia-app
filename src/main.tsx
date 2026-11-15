@@ -31,7 +31,14 @@ const app = route.theme === 'earth' || route.theme === 'space' ? route.theme : n
 if (app) {
   document.querySelector<HTMLLinkElement>('#manifest')!.href = `/${app}.webmanifest`
   document.querySelector<HTMLMetaElement>('#theme-color')!.content = app === 'earth' ? '#f3eee4' : '#000815'
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) void navigator.serviceWorker.register(`/sw-${app}.js`, { scope: `/${app}` })
+  if (app === 'earth') { // its own icon, so the two apps can be told apart on one home screen
+    document.querySelector<HTMLLinkElement>('#icon')!.href = '/icon-earth.svg'
+    document.querySelector<HTMLLinkElement>('#apple-icon')!.href = '/apple-touch-icon-earth.png'
+  }
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    void navigator.serviceWorker.register(`/sw-${app}.js`, { scope: `/${app}` })
+    void navigator.storage?.persist?.() // ask the browser not to clear the offline copy when the phone runs low on space
+  }
 }
 
 createRoot(document.getElementById('root')!).render(
