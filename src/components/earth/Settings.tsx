@@ -16,7 +16,7 @@ export default function Settings({ t, lang, onLang, profile, onChange, onEditAbo
   onReset: () => void
   onClose: () => void
 }) {
-  const summary = [t.sideSummary[profile.side], profile.position === 'seated' ? t.seated : t.standing, profile.prosthesis && t.prosthesis, profile.aid && t.walkingAid].filter(Boolean).join(' · ')
+  const summary = [t.sideSummary[profile.side], t[profile.position], profile.prosthesis && t.prosthesis, profile.aid && t.walkingAid].filter(Boolean).join(' · ')
   return (
     <div className={styles.screen}>
       <header className={styles.bar}>

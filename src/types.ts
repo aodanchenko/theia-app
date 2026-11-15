@@ -50,7 +50,7 @@ export interface EarthProfile {
   side: 'left' | 'right' | 'both' | 'unsure' // affected side
   prosthesis: boolean
   aid: boolean // cane, crutch or walker
-  position: 'standing' | 'seated' // how they exercise
+  position: 'standing' | 'seated' | 'lying' // how they exercise (lying: heel slides in bed)
   voice: boolean // speak the cues
   sounds?: boolean // feedback sounds; missing (older saved answers) means on
   bigText: boolean

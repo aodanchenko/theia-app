@@ -75,7 +75,7 @@ export function useEarthDemo() {
   }, [i, voice, paused, step.phase, cue.title])
 
   const state: DemoState = {
-    phase: step.phase, paused, activity: step.activity, label: activityLabel(step.activity, false), rep: step.rep, verdict, cue, history, streak,
+    phase: step.phase, paused, activity: step.activity, label: activityLabel(step.activity, 'standing'), rep: step.rep, verdict, cue, history, streak,
     good: history.filter((h) => h === 'good').length, fixes: history.filter((h) => h === 'fix').length, seq: step.rep,
   }
   return {

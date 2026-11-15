@@ -22,7 +22,7 @@ export function cueFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { title:
   if (v.kind === 'learning') return { title: t.keepGoing, hint: t.learning(v.done, CALIBRATION) }
   if (v.kind === 'good') return { title: t.goodRep, hint: t.likeNormal }
   return {
-    depth: { title: p.position === 'seated' ? t.slower : t.deeper, hint: t.steady },
+    depth: { title: p.position === 'standing' ? t.deeper : t.slower, hint: t.steady },
     kneeWidth: { title: t.kneeOut(side), hint: t.kneesOverToes },
     trunkLean: { title: t.chestUp, hint: t.lookAhead },
     asymmetry: { title: t.useLeg(side), hint: t.shareWeight },
@@ -32,7 +32,7 @@ export function cueFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { title:
 // The first instruction on the camera screen, before any movement.
 export function startHint(p: EarthProfile, lang: Lang = 'en'): string {
   const t = TEXT[lang]
-  const move = p.position === 'seated' ? t.startSeated : t.startStanding
+  const move = { seated: t.startSeated, standing: t.startStanding, lying: t.startLying }[p.position]
   const support = p.aid ? t.keepSupport : p.prosthesis ? t.onlySteady : ''
   return move + support
 }
@@ -83,7 +83,7 @@ export function markFor(v: Verdict, p: EarthProfile, lang: Lang = 'en'): { joint
   return {
     kneeWidth: sides.map(knee),
     trunkLean: [{ joints: [11, 12], label: t.markChest, arrow: 'up' as const }],
-    depth: [{ joints: [23, 24], label: p.position === 'seated' ? t.markSlower : t.markLower, arrow: 'down' as const }],
+    depth: [{ joints: [23, 24], label: p.position === 'standing' ? t.markLower : t.markSlower, arrow: 'down' as const }],
     asymmetry: sides.map((side) => ({ joints: [side === 'left' ? 25 : 26], label: t.markLeg, arrow: null })),
   }[v.feature]
 }

@@ -19,6 +19,7 @@ test('earthCoach: first reps learn the normal, then a knees-in rep asks for the 
 test('earthCoach: the start hint follows seated/standing and the walking aid', () => {
   assert.match(startHint(P), /bend your knees.*support within reach/)
   assert.match(startHint({ ...P, position: 'seated', aid: false }), /^Sit tall/)
+  assert.match(startHint({ ...P, position: 'lying', aid: false }), /^Lie on your back/)
 })
 
 test('earthCoach: notes read like an instructor, marks sit on the affected joint', () => {

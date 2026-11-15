@@ -137,7 +137,7 @@ export default function EarthPage() {
       : (
         <CoachScreen
           bar={<CoachBar t={t} results={results} total={SET_REPS} paused={!running} onPause={toggle} onSettings={() => setScreen('settings')} />}
-          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position === 'seated', lang) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
+          camera={<EarthCamera stream={camera.stream} onPose={onPose} label={camera.status === 'on' && activity !== 'away' && !done ? activityLabel(activity, profile.position, lang) : undefined} away={camera.status === 'on' && activity === 'away'} marks={marks} />}
           note={<NoteCard kind={note.kind} title={note.title} line={note.line} />}
           action={<ChunkyButton tone={done ? 'good' : undefined} onClick={toggle}>{camera.error ? t.tryAgain : done ? t.anotherSet : running ? t.pause : t.resume}</ChunkyButton>}
         />

@@ -142,7 +142,7 @@ Each component is one `.tsx` file plus a `.module.css` next to it. Props are pla
 | `ChunkyButton` | `onClick`, `tone?`, `disabled?`, children | Full-width primary action with the solid lip; one per screen |
 | `LangSwitch` | `lang`, `label`, `onChange` | EN / УКР segmented switch; each button named in its own language |
 | `Icon` | `name`, `size` | Earth's single icon set (2.2 stroke, round). No emoji |
-| `AboutYou` | `initial?`, `onDone`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing, voice, bigger text |
+| `AboutYou` | `initial?`, `onDone`, `onCancel?` | First-open questions, tap only, one per screen: affected side, prosthesis, walking aid, seated/standing/lying, voice, bigger text |
 | `PlacePhone` | `camera`, `seen`, `error`, `onRetry`, `onDone` | Optional setup: hip height, 2–3 steps; frame turns green with "I can see you" |
 | `EarthCamera` | `stream`, `onPose`, `label?`, `away?`, `marks[]` | The camera framed inside the page: mirrored video + skeleton, activity label, dashed "stand here" outline, marks placed on the real joints (maps video coords through the cover crop and mirror) |
 | `Settings` | `profile`, `onChange`, `onEditAbout`, `onPlace`, `onReset`, `onClose` | About you, speak tips, bigger text, placing the phone, get help (stop + 112), about, start over |

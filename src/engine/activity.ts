@@ -1,6 +1,7 @@
 // What the person is doing right now, from the knee angle over time: standing, going down, holding the bottom
 // (squatting / sitting), coming up, or out of view. Plain TS, runs in Node.
 import { TEXT, type Lang } from '../earthText.ts'
+import type { EarthProfile } from '../types.ts'
 import { kneeFlexion, type Skeleton } from './squat.ts'
 
 export type Activity = 'away' | 'standing' | 'goingDown' | 'holding' | 'comingUp'
@@ -32,7 +33,8 @@ export function createActivityTracker() {
   }
 }
 
-export function activityLabel(a: Activity, seated: boolean, lang: Lang = 'en'): string {
+export function activityLabel(a: Activity, position: EarthProfile['position'], lang: Lang = 'en'): string {
   const t = TEXT[lang]
-  return (seated && a in t.activitySeated ? t.activitySeated[a as keyof typeof t.activitySeated] : t.activity[a])
+  const own: Partial<Record<Activity, string>> = position === 'seated' ? t.activitySeated : position === 'lying' ? t.activityLying : {}
+  return own[a] ?? t.activity[a]
 }
