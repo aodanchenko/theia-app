@@ -106,6 +106,14 @@ export default function EarthPage() {
     if (say) setTimeout(() => speak(say, t.speech), sound ? 450 : 0) // let the sound finish before the voice; not cancelled if the note changes meanwhile
   }, [reps.length, sound, say, t.speech])
 
+  // Instructions between reps (start, step into view, paused, camera problems) are spoken too, once they settle.
+  const instruction = profile?.voice && screen === 'live' && note.kind === 'idle' ? `${note.title}. ${note.line}` : null
+  useEffect(() => {
+    if (!instruction) return
+    const id = setTimeout(() => speak(instruction, t.speech), 700) // skips notes that flash by, e.g. stepping out of view for a moment
+    return () => clearTimeout(id)
+  }, [instruction, t.speech])
+
   let content
   if (screen === 'about' || !profile) {
     content = (
