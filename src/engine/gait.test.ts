@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { loadTcn, regionFeatures, scoredSeconds, type WalkWindow, sampleWindow, tcnForward, toPose17, type Pose17 } from './gait.ts'
+import { loadTcn, regionFeatures, wholeBody, scoredSeconds, type WalkWindow, sampleWindow, tcnForward, toPose17, type Pose17 } from './gait.ts'
 import FIXTURE from './gait.fixture.json' with { type: 'json' }
 
 const weights = loadTcn(readFileSync(new URL('./gait-tcn.bin', import.meta.url)).buffer as ArrayBuffer)
@@ -59,4 +59,11 @@ test('gait: deviations become named compensations; the prosthetic knee and aid u
   assert.equal(compensationFor(win('side', region('right_knee', 12, 35)), { prosthesis: true, side: 'left', aid: false })?.kind, 'stiffKnee') // the other knee still counts
   assert.equal(compensationFor(win('side', region('left_arm', 5, 20)), { ...who, aid: true }), null)
   assert.equal(compensationFor(win('side', region('right_knee', 60, 35)), who), null) // more knee bend: not a compensation we name
+})
+
+test('gait: walking is judged only with the whole body in view', () => {
+  const body: Pose17 = Array.from({ length: 17 }, (_, j) => [0, -0.5 + j * 0.05, 1])
+  const noLegs: Pose17 = body.map((j, i) => ([2, 3, 5, 6].includes(i) ? [0, 0, 0] : j)) // knees and ankles out of frame
+  assert.equal(wholeBody(Array(30).fill(body)), 1)
+  assert.equal(wholeBody(Array(30).fill(noLegs)), 0)
 })

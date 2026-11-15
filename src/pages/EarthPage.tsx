@@ -96,7 +96,8 @@ export default function EarthPage() {
   const results: NoteKind[] = walking ? walkWindows.map((w) => (compensationFor(w, who) ? 'fix' : 'good')) : profile ? repResults(reps, profile, MODEL, THRESHOLD) : []
   const good = results.filter((r) => r === 'good').length
   const lastWalk = walk.windows.slice(-3).reverse().find(assessed) ?? walk.windows.at(-1) // the latest scored second, so one unclear window does not flash the framing hint
-  const walkOff = lastWalk ? compensationFor(lastWalk, who) : null
+  const partial = !!walk.windows.at(-1)?.partial // body cut off right now: no tip and no mark from an older second
+  const walkOff = lastWalk && !partial ? compensationFor(lastWalk, who) : null
   const note: { kind: NoteKind; title: string; line: string } =
     camera.error ? { kind: 'idle', title: t.cameraOff, line: t.cameraErrors[camera.errorCode ?? ''] ?? t.cameraErrors.other }
     : camera.status !== 'on' ? { kind: 'idle', title: t.starting, line: t.allowCamera }
@@ -105,6 +106,7 @@ export default function EarthPage() {
     : activity === 'away' ? { kind: 'idle', title: t.stepIn, line: t.stepInLine }
     : walking ? (
       !lastWalk ? { kind: 'idle', title: t.startWhenReady, line: t.walkStart }
+      : partial ? { kind: 'idle', title: t.stepIn, line: t.stepInLine }
       : walkOff ? { kind: 'fix', title: t.comp[walkOff.kind].tip(walkOff.side), line: `${t.comp[walkOff.kind].name} · ${t.comp[walkOff.kind].why}` }
       : assessed(lastWalk) ? { kind: 'good', title: t.walkGood, line: t.walkGoodLine }
       : { kind: 'idle', title: t.walkView, line: t.walkViewLine })

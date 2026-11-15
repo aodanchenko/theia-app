@@ -294,13 +294,19 @@ function smoothRuns(curve: number[], ok: boolean[]) {
 }
 
 // ---------- one window, for the coaching screens ----------
-export interface WalkWindow { start: number; view: View | null; regions: RegionResult[]; criteria: Criterion[] } // start: seconds since walking began
+export interface WalkWindow { start: number; view: View | null; regions: RegionResult[]; criteria: Criterion[]; partial?: true } // start: seconds since walking began; partial: the whole body was not in view
 
 export function assessWindow(w: TcnWeights | null, p: Pose17[], opts: { minSide: number; elapsed: number; start: number }): WalkWindow {
   const view = guessView(p)
   if (!view) return { start: opts.start, view, regions: [], criteria: [] }
+  // Each region only needs its own joints, so with the legs cut off the hips alone could still "hike". Judge walking
+  // only while shoulders, hips, knees and ankles are all reliable in 80% of the window.
+  if (wholeBody(p) < 0.8) return { start: opts.start, view, regions: [], criteria: [], partial: true }
   return { start: opts.start, view, regions: assessRegions(p, view), criteria: w ? assessCriteria(w, p, view, opts) : [] }
 }
+
+const WHOLE = [1, 2, 3, 4, 5, 6, 11, 14] // hips, knees, ankles, shoulders (H17)
+export const wholeBody = (p: Pose17[]) => p.filter((f) => WHOLE.every((j) => f[j][2] >= 0.4)).length / Math.max(p.length, 1)
 
 // A window counts once the view is known and at least one region could be measured.
 export const assessed = (win: WalkWindow) => win.regions.some((r) => r.state !== 'unavailable')

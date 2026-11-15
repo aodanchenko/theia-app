@@ -112,7 +112,7 @@ const WALK_BASIS = 'EXPERIMENTAL · Theia gait models (regional density + TCN), 
 const named = (w: WalkWindow, r: WalkWindow['regions'][number]) => { const f = compensationFor({ ...w, regions: [r], criteria: [] }, CREW); return f ? COMP[f.kind].name.toLowerCase() : null }
 
 function walkView(windows: WalkWindow[], cameraOn: boolean): { rows: Parameter[]; criteria: Parameter[]; seconds: number; flags: number; state: string; rec: { decision: string; action: string; reason: string; next?: string; tone: Tone } } {
-  const done = scoredSeconds(windows), last = windows.slice(-3).reverse().find(assessed) ?? windows.at(-1), off = last ? compensationFor(last, CREW) : null
+  const done = scoredSeconds(windows), last = windows.at(-1)?.partial ? windows.at(-1) : windows.slice(-3).reverse().find(assessed) ?? windows.at(-1), off = last ? compensationFor(last, CREW) : null
   const rows: Parameter[] = REGIONS.map((region) => {
     const r = last?.regions.find((x) => x.region === region)
     if (!r?.top || r.state === 'unavailable') return { name: REGION_TITLE[region], now: '—', correct: '—', base: '—' }
