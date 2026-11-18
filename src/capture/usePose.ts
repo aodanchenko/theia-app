@@ -47,8 +47,9 @@ export default function usePose(
         frame = requestAnimationFrame(loop)
         if (video.readyState < 2 || video.currentTime === lastTime) return // no new frame yet
         lastTime = video.currentTime
-        ctx.canvas.width = video.videoWidth
-        ctx.canvas.height = video.videoHeight
+        if (ctx.canvas.width !== video.videoWidth) ctx.canvas.width = video.videoWidth // resizing reallocates the bitmap: only on a size change
+        if (ctx.canvas.height !== video.videoHeight) ctx.canvas.height = video.videoHeight
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
         const now = performance.now()
         const result = pose.detectForVideo(video, now)
         if (!result.landmarks[0]) return
