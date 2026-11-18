@@ -66,4 +66,6 @@ test('gait: walking is judged only with the whole body in view', () => {
   const noLegs: Pose17 = body.map((j, i) => ([2, 3, 5, 6].includes(i) ? [0, 0, 0] : j)) // knees and ankles out of frame
   assert.equal(wholeBody(Array(30).fill(body)), 1)
   assert.equal(wholeBody(Array(30).fill(noLegs)), 0)
+  const prosthesis: Pose17 = body.map((j, i) => ([5, 6].includes(i) ? [0, 0, 0] : j)) // left knee and ankle read poorly
+  assert.equal(wholeBody(Array(30).fill(prosthesis)), 1)
 })

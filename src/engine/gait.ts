@@ -77,15 +77,16 @@ const angleAt = (a: number[], b: number[], c: number[]) => {
   return deg(Math.acos(Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1]) / Math.max(Math.hypot(...u) * Math.hypot(...v), 1e-8)))))
 }
 
+const reliable = (f: Pose17, j: number) => f[j][2] >= 0.4
+
 // One region's 4 features over a window, or the reasons it cannot be measured.
 export function regionFeatures(p: Pose17[], view: View): { values: (number[] | null)[]; coverage: number[]; reasons: string[][] } {
-  const valid = (f: Pose17, j: number) => f[j][2] >= 0.4
-  const torso = p.filter((f) => valid(f, 8) && valid(f, 0)).map((f) => Math.hypot(f[8][0] - f[0][0], f[8][1] - f[0][1]))
+  const torso = p.filter((f) => reliable(f, 8) && reliable(f, 0)).map((f) => Math.hypot(f[8][0] - f[0][0], f[8][1] - f[0][1]))
   const scale = torso.length ? median(torso) : 0
   const values: (number[] | null)[] = [], coverage: number[] = [], reasons: string[][] = []
   JOINTS.forEach((joints, r) => {
     const why = new Set<string>()
-    const ok = p.map((f) => joints.every((j) => valid(f, j)))
+    const ok = p.map((f) => joints.every((j) => reliable(f, j)))
     coverage.push(ok.filter(Boolean).length / p.length)
     if (scale < 0.08) why.add('torso too small or not visible')
     if (coverage[r] < 0.8) why.add('fewer than 80% reliable frames')
@@ -299,14 +300,16 @@ export interface WalkWindow { start: number; view: View | null; regions: RegionR
 export function assessWindow(w: TcnWeights | null, p: Pose17[], opts: { minSide: number; elapsed: number; start: number }): WalkWindow {
   const view = guessView(p)
   if (!view) return { start: opts.start, view, regions: [], criteria: [] }
-  // Each region only needs its own joints, so with the legs cut off the hips alone could still "hike". Judge walking
-  // only while shoulders, hips, knees and ankles are all reliable in 80% of the window.
+  // Each region needs only its own joints: without this gate the hips alone could "hike" with the legs out of view.
   if (wholeBody(p) < 0.8) return { start: opts.start, view, regions: [], criteria: [], partial: true }
   return { start: opts.start, view, regions: assessRegions(p, view), criteria: w ? assessCriteria(w, p, view, opts) : [] }
 }
 
-const WHOLE = [1, 2, 3, 4, 5, 6, 11, 14] // hips, knees, ankles, shoulders (H17)
-export const wholeBody = (p: Pose17[]) => p.filter((f) => WHOLE.every((j) => f[j][2] >= 0.4)).length / Math.max(p.length, 1)
+// Shoulders and hips, plus at least one knee and one ankle: a prosthetic leg, or the far leg in a side view, is often
+// read with low confidence; feet cut off by the frame still fail.
+const CORE = [1, 4, 11, 14] // hips, shoulders (H17)
+const whole = (f: Pose17) => CORE.every((j) => reliable(f, j)) && (reliable(f, 2) || reliable(f, 5)) && (reliable(f, 3) || reliable(f, 6))
+export const wholeBody = (p: Pose17[]) => p.filter(whole).length / Math.max(p.length, 1)
 
 // A window counts once the view is known and at least one region could be measured.
 export const assessed = (win: WalkWindow) => win.regions.some((r) => r.state !== 'unavailable')
