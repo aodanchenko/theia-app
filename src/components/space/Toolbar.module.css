@@ -6,14 +6,14 @@
 
 .button { position: relative; height: 28px; padding: 0 12px 0 10px; border: 0; border-radius: 2px; background: var(--bg); box-shadow: var(--raised); color: var(--ink-2); font: 600 var(--text-sm) var(--font-sans); letter-spacing: .1em; text-shadow: var(--engraved); text-transform: uppercase; white-space: nowrap; transition-property: background-color, box-shadow, transform; transition-duration: var(--dur-press); transition-timing-function: ease-out; }
 .button::before { content: ''; position: absolute; inset: -6px 0; } /* 40px tall hit area, never overlapping neighbours sideways */
-.button:hover:not(:disabled) { background: var(--surface); }
+@media (hover: hover) and (pointer: fine) { .button:hover:not(:disabled) { background: var(--surface); } } /* not on touch: a tapped button would stay lit */
 .button:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--pressed); background: var(--surface-head); }
 .button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .button:disabled { background: transparent; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); color: var(--muted); text-shadow: none; cursor: not-allowed; opacity: .75; }
 
 /* The one red control (Enable camera). Same bevel, tuned for a red surface. */
-.button[data-camera] { background: var(--nasa-red); color: #fff; text-shadow: var(--engraved-dark); box-shadow: 0 0 0 1px color-mix(in oklch, var(--nasa-red) 70%, black), 0 1px 0 rgba(0, 0, 0, .1), inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -1px 0 rgba(0, 0, 0, .15); }
-.button[data-camera]:hover:not(:disabled) { background: color-mix(in oklch, var(--nasa-red) 90%, black); }
+.button[data-camera] { background: var(--nasa-red); color: var(--on-solid); text-shadow: var(--engraved-dark); box-shadow: 0 0 0 1px color-mix(in oklch, var(--nasa-red) 70%, black), 0 1px 0 rgba(0, 0, 0, .1), inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -1px 0 rgba(0, 0, 0, .15); }
+@media (hover: hover) and (pointer: fine) { .button[data-camera]:hover:not(:disabled) { background: color-mix(in oklch, var(--nasa-red) 90%, black); } }
 .button[data-camera]:active:not(:disabled) { background: color-mix(in oklch, var(--nasa-red) 82%, black); box-shadow: 0 0 0 1px color-mix(in oklch, var(--nasa-red) 60%, black), inset 0 1px 3px rgba(0, 0, 0, .3); }
 
 .note { min-width: 0; overflow: hidden; color: var(--muted); font: var(--text-sm) var(--font-mono); white-space: nowrap; text-overflow: ellipsis; }

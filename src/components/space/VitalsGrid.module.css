@@ -7,7 +7,7 @@
 .lamp { flex: none; padding: 1px 5px; border-radius: 2px; background: var(--bg); box-shadow: var(--sunken); font: 700 9px/1.4 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .tile[data-status="normal"] .lamp { color: var(--good); }
 .tile[data-status="watch"] .lamp { color: var(--caution); }
-.tile[data-status="flag"] .lamp { background: var(--alert); color: #fff; box-shadow: none; }
+.tile[data-status="flag"] .lamp { background: var(--alert); color: var(--on-solid); box-shadow: none; }
 
 .body { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* Recessed readout window. Fixed min width so changing digits never shift the sparkline. */

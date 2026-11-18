@@ -73,7 +73,8 @@ scripts/                 offline tools (train-squat.ts) and the PWA build plugin
 | `--alert` | flags only | NASA red #fc3b30 | #b4560f |
 | `--cue` | overlay drawn on the camera | NASA red | #f0a24a |
 | `--good` / `--good-band` | normal, within baseline (phosphor green); live skeleton joints | #12803a | #2f7a4b |
-| `--on-solid` | text and knobs on a solid green fill | – | linen white |
+| `--on-solid` | text on a solid fill (Space: blue bar, red button, camera, black gate; Earth: green) | #fff | linen white |
+| `--frame` | camera background behind the video | #111 | warm dark |
 | `--caution` | needs attention, not a health flag: camera errors, framing | amber #b26f00 | – |
 | `--mark` / `--mark-empty` | neutral chart marks | greys | – |
 | `--font-body` | body font | IBM Plex Sans | Atkinson Hyperlegible |
@@ -93,6 +94,7 @@ Brand constants on `:root`: `--nasa-red`, `--nasa-blue`, `--nasa-black`, `--ease
 - **Home is customer-facing:** no hackathon or event references; plain landing (wordmark, headline, two ink-outline buttons); every row a ≥ 44px tap target; safe-area padding.
 - **Space needs a wide screen:** phones upright get `RotateGate`; phones sideways get a narrower camera column.
 - **Earth is large and calm:** one instruction, one primary button, 18px minimum, touch targets ≥ 44px (Stop is 84px).
+- **Hover only where it exists:** every `:hover` sits inside `@media (hover: hover) and (pointer: fine)`, so a tapped control never stays lit on a tablet or phone.
 - **Motion:** entrances only, once. Use the `enter` class (rise, optional `--delay` in ms) or `pop` (SVG overlays). `prefers-reduced-motion` turns them off. No `transition: all`.
 - **Anything simulated says so**, with the visible label `SIMULATED` (see Vitals).
 

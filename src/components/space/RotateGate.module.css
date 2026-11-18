@@ -5,18 +5,18 @@
     position: fixed; inset: 0; z-index: 1;
     display: flex; flex-direction: column; justify-content: center; gap: 12px;
     padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
-    background: var(--nasa-black); color: #e9ecf1;
+    background: var(--nasa-black); color: var(--on-solid);
     -webkit-tap-highlight-color: transparent;
   }
 }
 .icon { width: 96px; height: 96px; margin-bottom: 12px; }
-.ghost { fill: none; stroke: rgba(255, 255, 255, .25); stroke-width: 2; stroke-dasharray: 3 3; }
-.phone { fill: none; stroke: #fff; stroke-width: 2.5; }
+.ghost { fill: none; stroke: color-mix(in srgb, var(--on-solid) 25%, transparent); stroke-width: 2; stroke-dasharray: 3 3; }
+.phone { fill: none; stroke: var(--on-solid); stroke-width: 2.5; }
 .turn { fill: none; stroke: var(--nasa-red); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.eyebrow { font: 600 11px var(--font-sans); letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .55); }
-.title { font: 600 30px/1.1 var(--font-sans); color: #fff; text-wrap: balance; }
-.text { max-width: 34ch; font: 16px/1.5 var(--font-sans); color: rgba(233, 236, 241, .8); text-wrap: pretty; }
+.eyebrow { font: 600 11px var(--font-sans); letter-spacing: .14em; text-transform: uppercase; color: color-mix(in srgb, var(--on-solid) 55%, transparent); }
+.title { font: 600 30px/1.1 var(--font-sans); color: var(--on-solid); text-wrap: balance; }
+.text { max-width: 34ch; font: 16px/1.5 var(--font-sans); color: color-mix(in srgb, var(--on-solid) 80%, transparent); text-wrap: pretty; }
 .links { display: grid; gap: 4px; margin-top: 12px; }
-.links a { display: flex; align-items: center; min-height: 44px; font: 600 16px var(--font-sans); color: #fff; text-underline-offset: .2em; touch-action: manipulation; }
+.links a { display: flex; align-items: center; min-height: 44px; font: 600 16px var(--font-sans); color: var(--on-solid); text-underline-offset: .2em; touch-action: manipulation; }
 .links a:active { color: var(--nasa-red); }
-.links a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.links a:focus-visible { outline: 2px solid var(--on-solid); outline-offset: 2px; }
