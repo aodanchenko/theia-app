@@ -1,6 +1,7 @@
 .workbench {
-  height: 100dvh;
-  width: 100%;
+  zoom: var(--z, 1);
+  height: calc(100dvh / var(--z, 1)); /* zoom scales lengths, so divide to still fill the screen */
+  width: calc(100vw / var(--z, 1));
   grid-template-columns: minmax(0, 1fr);
   display: grid;
   grid-template-rows: 30px 44px 1fr 24px;
@@ -11,3 +12,8 @@
 .main { display: grid; grid-template-columns: min(520px, 45vw) minmax(0, 1fr); min-height: 0; } /* camera narrows on a phone turned sideways */
 .side { display: flex; flex-direction: column; min-height: 0; overflow: auto; background: var(--surface); }
 .side > * { flex: none; }
+/* Big screens: scale the whole bench up from its laptop size (MacBook Air, 1470×956) instead of stretching panels,
+   so camera, chart and text keep their proportions. */
+@media (min-width: 1840px) and (min-height: 1150px) { .workbench { --z: 1.25; } }
+@media (min-width: 2200px) and (min-height: 1380px) { .workbench { --z: 1.5; } }
+@media (min-width: 2940px) and (min-height: 1840px) { .workbench { --z: 2; } }
